@@ -1,25 +1,12 @@
 {
-  "name": "smart-contract",
-  "version": "0.0.0",
-  "description": "Smart Contract per Shopchain",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Yakuzaishi-SWE/smart-contract.git"
-  },
-  "author": "Yakuzaishi-SWE",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Yakuzaishi-SWE/smart-contract/issues"
-  },
-  "homepage": "https://github.com/Yakuzaishi-SWE/smart-contract#readme",
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.15",
     "chai": "^4.3.6",
-    "mocha": "^9.2.0",
-    "solidity-coverage": "^0.7.18",
-    "truffle": "^5.4.32"
+    "chai-as-promised": "7.1.1",
+    "truffle": "5.0.5",
+    "web3": "1.0.0-beta.55"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.4.2"
   }
 }
