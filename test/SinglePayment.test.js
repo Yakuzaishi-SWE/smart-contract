@@ -12,6 +12,12 @@ require('chai')
 
 const SinglePayment = artifacts.require('./SinglePayment.sol')
 
+async function getGas(_response) {
+    let gasUsed = new BN(_response.receipt.gasUsed);
+    gasUsed = gasUsed.mul(new BN(await web3.eth.getGasPrice()))
+    return gasUsed;
+}
+
 contract('SinglePayment', ([deployer, buyer, seller]) => {
     let singlePayment
 
@@ -22,7 +28,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
     // check that the deploy is OK
     // checks:
     //      1. correct deploy the contract
-    //      2. the contract variables are set
+    //      2. the contract order counter is zero
     describe('deployment', async() => {
         it('contract deployed successfully', async() => {
             const address = await singlePayment.address
@@ -36,9 +42,12 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             const orderCount = await singlePayment.getOrderCount();
             assert.equal(orderCount, 0)
         })
-
     })
 
+    // check that the contract create the order correctly
+    // checks:
+    //      1. correct deploy the contract
+    //      2. the contract order counter is zero
     describe('order creation', async() => {
         // variables updated that we need to do checks
         let result, orderCount, oldContractBalance
@@ -46,16 +55,14 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
         before(async() => {
             oldContractBalance = await web3.eth.getBalance(singlePayment.address)
             oldContractBalance = new BN(oldContractBalance)
-            result = await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), {from: buyer, value: web3.utils.toWei('1', 'Ether')})
+            result = await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), "3F2504E0-4F89-11D3-9A0C-0305E82C3301", {from: buyer, value: web3.utils.toWei('1', 'Ether')})
             orderCount = await singlePayment.getOrderCount()
         })
 
-        
         it('order created correctly', async() => {
             // SUCCESS
-            assert.equal(orderCount, 1)
             const event = result.logs[0].args
-            const newContractBalance = await web3.eth.getBalance(singlePayment.address)
+            assert.equal(orderCount.toString(), event.id.toString())
             assert.equal(event.ownerAddress, buyer, 'owner address is correct')
             assert.equal(event.sellerAddress, seller, "seller address is correct")
             assert.equal(event.amount, web3.utils.toWei('1', 'Ether'), 'amount is correct')
@@ -63,19 +70,25 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             assert.notEqual(event.unlockCode.toNumber(), null)
             assert.notEqual(event.unlockCode.toNumber(), undefined)
             assert.equal(event.state, 1, 'order is filled')
-            
+        })
+        
+        it("the contract is filled with the correct amount", async() => {
+            const event = result.logs[0].args
+            const newContractBalance = await web3.eth.getBalance(singlePayment.address)
             const expectedBalance = oldContractBalance.add(new BN(event.amount))
             assert.equal(expectedBalance.toString(), newContractBalance.toString(), "contract is correctly filled")
+        })
 
+        it("FAILURE cases checks", async() => {
             /// FAILURE CASES
             // user tries to insert an amount less than the required amount
-            await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), {from: buyer, value: web3.utils.toWei('0.5', 'Ether')}).should.be.rejected
+            await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), "3F2504E0-4F89-11D3-9A0C-0305E82C3301", {from: buyer, value: web3.utils.toWei('0.5', 'Ether')}).should.be.rejected
 
             // user tries to order his item, or send funds to itself
-            await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), {from: seller, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected
+            await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), "3F2504E0-4F89-11D3-9A0C-0305E82C3301", {from: seller, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected
         
             // user tries to pass value equal to zero
-            await singlePayment.newOrder(seller, 0, {from: seller, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected
+            await singlePayment.newOrder(seller, 0, "3F2504E0-4F89-11D3-9A0C-0305E82C3301", {from: seller, value: web3.utils.toWei('1', 'Ether')}).should.be.rejected
         })
 
         it('get the correct order infos', async() => {
@@ -83,6 +96,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             assert.equal(order.sellerAddress, seller, 'seller address is correct')
             assert.equal(order.ownerAddress, buyer, 'buyer address is correct')
             assert.equal(order.state, 1, "order state is correct")
+            assert.equal(order.orderGUID, "3F2504E0-4F89-11D3-9A0C-0305E82C3301", "Order GUID is correct")
         })
     })
 
@@ -109,6 +123,15 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             const expectedSellerBalance = oldSellerBalance.add(new BN(order.amount))
             assert.equal(expectedSellerBalance.toString(), newSellerBalance.toString(), "funds correctly send to seller from smart contract")
         })
+
+        it("FAILURE cases checks", async() => {
+            // CASE 1: order id isn't correct
+            await singlePayment.confirmReceived(2, unlockCode, {from: buyer}).should.be.rejected
+            // CASE 2: order unlock code doesn't match with unlock code saved
+            await singlePayment.confirmReceived(1, 12345, {from: buyer}).should.be.rejected
+            // CASE 3: order is unlock from an address different from buyer address
+            await singlePayment.confirmReceived(1, unlockCode, {from: 0xD66574f6c757EFd7056B20E507f4E29AF21c32ec}).should.be.rejected
+        })
     })
 
     describe('refound owner and order canceled', async() => {
@@ -116,14 +139,14 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
 
         before(async() => {
             // create a new order with state "FILLED"
-            result = await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), {from: buyer, value: web3.utils.toWei('1', 'Ether')})
+            result = await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), "3F2504E0-4F89-11D3-9A0C-0305E82C3301",{from: buyer, value: web3.utils.toWei('1', 'Ether')})
             orderCount = await singlePayment.getOrderCount()
-        })
-
-        it('order canceled and buyer received funds back', async() => {
             // take buyer old balance
             oldBuyerBalance = await web3.eth.getBalance(buyer)
             oldBuyerBalance = new BN(oldBuyerBalance)
+        })
+
+        it('order state is set to canceled', async() => {
             // call refund function
             result = await singlePayment.refundOwner(orderCount, {from: buyer})
             const event = result.logs[0].args
@@ -131,15 +154,24 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             // take buyer new balance
             newBuyerBalance = await web3.eth.getBalance(buyer)
             newBuyerBalance = new BN(newBuyerBalance)
-            gasFee = new BN(result.receipt.gasUsed * 2)
-            newBuyerBalance = newBuyerBalance.add(new BN(gasFee*10000000000))
-
+            
+            gasFee = await getGas(result)
             oldBuyerBalance = await oldBuyerBalance.add(new BN(order.amount))
+            newBuyerBalance = newBuyerBalance.add(gasFee)
             
-            //console.log(oldBuyerBalance.toString(), newBuyerBalance.toString())
-            assert.equal(order.state, 3, 'the order is set to canceled')
+            assert.equal(order.state, 3, 'the order is set to canceled') 
+        })
+        
+        /**
+         * WARNING !!!!
+         * 
+         * when the test is running under coverage test, it can distort gas consumption so the test
+         * that check exact balance values is skipped.
+         * 
+         */
+        it("check buyer balance after refund [ @skip-on-coverage ]", async function() {
+        //it("check buyer balance after refund", async function() {
             assert.equal(oldBuyerBalance.toString(), newBuyerBalance.toString(), "funds correctly send to buyer from smart contract")
-            
         })
     })
 })

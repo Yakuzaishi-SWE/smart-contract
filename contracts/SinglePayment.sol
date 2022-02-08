@@ -15,6 +15,7 @@ contract SinglePayment {
         uint amount;
         uint unlockCode;
         OrderState state;
+        string orderGUID;
     }
 
     // mapping for searching optimization
@@ -130,7 +131,7 @@ contract SinglePayment {
     /// Confirm the purchase as buyer.
     /// The ether will be locked until confirmReceived
     /// is called.
-    function newOrder(address payable _seller, uint _amount)
+    function newOrder(address payable _seller, uint _amount, string memory _orderGUID)
         external
         payable
         notItself(_seller, msg.sender)
@@ -145,7 +146,7 @@ contract SinglePayment {
             "order amount is invalid"
         );
         orderCount++;
-        orders[orderCount] = Order(_seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
+        orders[orderCount] = Order(_seller, payable(msg.sender), _amount, block.number, OrderState.Filled, _orderGUID);
         // overwrite it
         emit OrderConfirmed(orderCount, _seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
     }

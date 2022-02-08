@@ -20,6 +20,8 @@ module.exports = {
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
+    grep: "@skip-on-coverage",  // Find everything with this tag
+    invert: true                // Run the grep's inverse set.
   },
 
   // Configure directories
