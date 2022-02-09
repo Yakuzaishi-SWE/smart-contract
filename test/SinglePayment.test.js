@@ -149,7 +149,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
 
         it('order state is set to canceled', async () => {
             // call refund function
-            result = await singlePayment.refundOwner(orderCount, { from: buyer })
+            result = await singlePayment.refundFromOwner(orderCount, { from: buyer })
             const event = result.logs[0].args
             const order = await singlePayment.getOrderById(event.id)
             // take buyer new balance
@@ -214,8 +214,6 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             assert.equal(order.amount, amount, "amount is correct")
             assert.equal(order.unlockCode, unlockCode, "Unlock code is correct")
             assert.equal(order.state, state, "state is correct")
-
-
         })
         
         // it("check getUnlockCode(uint)", async function () {

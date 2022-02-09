@@ -1,3 +1,9 @@
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const mnemonicPhrase = "original priority brass violin feed episode seat used guilt amateur reward coin";
+
+// account: 0x94A4244d024602e13C5f4f1198ff5C2caA676703;
+// contract: 0xD5D4f2Dd47B41f4eACBF04cC4769194ef713AAB2
+
 module.exports = {
   networks: {
     // Useful for testing. The `development` name is special - truffle uses it by default
@@ -11,10 +17,21 @@ module.exports = {
        port: 8546,            // Standard Ethereum port (default: none)
        network_id: "*",       // Any network (default: none)
     },
-    // fantomtestnet: {
-    //   provider: () => new HDWalletProvider(mnemonic, "https://rpc.testnet.fantom.network/"),
-    //   network_id: 4002
-    // }
+    /*
+    FTMtestnet: {
+      provider: () => 
+       new HDWalletProvider({
+         mnemonic: {
+           phrase: mnemonicPhrase
+         }, 
+         providerOrUrl: "https://rpc.testnet.fantom.network/",
+         numberOfAddresses: 1,
+         shareNonce: true,
+         derivationPath: "m/44'/1'/0'/0/"
+       }),
+      network_id: 4002
+   }
+   */
   },
 
   // Set default mocha options here, use special reporters etc.

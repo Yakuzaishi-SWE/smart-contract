@@ -3,7 +3,7 @@
 // VERSION = 1.0.0
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+//import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
  
 contract SinglePayment {
 
@@ -174,9 +174,27 @@ contract SinglePayment {
 
     /// Refound owner if he decided to cancel the order before
     /// the Closed state (before unlock)
-    function refundOwner(uint id)
+    function refundFromOwner(uint id)
         external
         onlyOwner(id)
+        inState(id, OrderState.Filled)
+    {
+        Order memory currentOrder = orders[id];
+        currentOrder.ownerAddress.transfer(currentOrder.amount);
+        // It is important to change the state first because
+        // otherwise, the contracts called using `send` below
+        // can call in again here.
+        currentOrder.state = OrderState.Canceled;
+        
+        // overwrite
+        orders[id] = currentOrder;
+        emit OwnerRefunded(id);
+    }
+
+    /// Refound owner if the seller decides to cancel the order
+    function refundFromSeller(uint id)
+        external
+        onlySeller(id)
         inState(id, OrderState.Filled)
     {
         Order memory currentOrder = orders[id];
@@ -227,6 +245,31 @@ contract SinglePayment {
         return orders[id];
     }
 
+    function getOrdersByBuyer(address _buyerAddress) external view returns(Order[] memory) {
+        uint[] memory ordersId;
+        ordersId = buyerOrders[_buyerAddress];
+
+        Order[] memory _buyerOrders;
+
+        for(uint i = 0; i < ordersId.length; i++){
+            _buyerOrders[ordersId[i]] = orders[ordersId[i]];
+        }
+
+        return _buyerOrders;
+    }
+
+    function getOrdersBySeller(address _sellerAddress) external view returns(Order[] memory) {
+        uint[] memory ordersId;
+        ordersId = sellerOrders[_sellerAddress];
+
+        Order[] memory _sellerOrders;
+
+        for(uint i = 0; i < ordersId.length; i++){
+            _sellerOrders[ordersId[i]] = orders[ordersId[i]];
+        }
+
+        return _sellerOrders;
+    }
 
     // we have to write a refund from seller too????
 }
