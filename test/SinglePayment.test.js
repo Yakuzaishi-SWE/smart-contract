@@ -90,6 +90,12 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
 
             // user tries to pass value equal to zero
             await singlePayment.newOrder(seller, 0, "3F2504E0-4F89-11D3-9A0C-0305E82C3301", { from: seller, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected
+        
+            // user tries to send negative coin value
+            await singlePayment.newOrder(seller, -1, "3F2504E0-4F89-11D3-9A0C-0305E82C3301", { from: buyer, value: web3.utils.toWei('1', 'Ether') }).should.be.rejected
+        
+            // user hasn't enough founds
+            await singlePayment.newOrder(seller, web3.utils.toWei('1000', 'Ether'), {from: buyer, value: web3.utils.toWei('1000', 'Ether')}).should.be.rejected
         })
 
         it('get the correct order infos', async () => {
@@ -128,14 +134,17 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
         it("FAILURE cases checks", async () => {
             // CASE 1: order id isn't correct
             await singlePayment.confirmReceived(2, unlockCode, { from: buyer }).should.be.rejected
-            // CASE 2: order unlock code doesn't match with unlock code saved
-            await singlePayment.confirmReceived(1, 12345, { from: buyer }).should.be.rejected
-            // CASE 3: order is unlock from an address different from buyer address
+            // CASE 2: order state is not set to FILLED
+            await singlePayment.confirmReceived(1, unlockCode, { from: buyer }).should.be.rejected
+            // CASE 3: order unlock code doesn't match with unlock code saved
+            await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), "3F2504E0-4F89-11D3-9A0C-0305E82C3301", { from: buyer, value: web3.utils.toWei('1', 'Ether') })
+            await singlePayment.confirmReceived(2, 12345, { from: buyer }).should.be.rejected
+            // CASE 4: order is unlock from an address different from buyer address
             await singlePayment.confirmReceived(1, unlockCode, { from: 0xD66574f6c757EFd7056B20E507f4E29AF21c32ec }).should.be.rejected
         })
     })
 
-    describe('refound owner and order canceled', async () => {
+    describe('Order owner requires the refund and order is set to canceled', async () => {
         let result, orderCount, oldBuyerBalance, newBuyerBalance
 
         before(async () => {
@@ -176,6 +185,41 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
         })
     })
 
+    describe('Order seller requires the refund and order is set to canceled', async () => {
+        let result, orderCount, oldBuyerBalance, newBuyerBalance
+
+        before(async () => {
+            // create a new order with state "FILLED"
+            result = await singlePayment.newOrder(seller, web3.utils.toWei('1', 'Ether'), "3F2504E0-4F89-11D3-9A0C-0305E82C3301", { from: buyer, value: web3.utils.toWei('1', 'Ether') })
+            orderCount = await singlePayment.getOrderCount()
+            // take buyer old balance
+            oldBuyerBalance = await web3.eth.getBalance(buyer)
+            oldBuyerBalance = new BN(oldBuyerBalance)
+        })
+
+        it('order state is set to canceled', async () => {
+            // call refund function
+            result = await singlePayment.refundFromSeller(orderCount, { from: seller })
+            const event = result.logs[0].args
+            const order = await singlePayment.getOrderById(event.id)
+            // take buyer new balance
+            newBuyerBalance = await web3.eth.getBalance(buyer)
+            newBuyerBalance = new BN(newBuyerBalance)
+
+            oldBuyerBalance = await oldBuyerBalance.add(new BN(order.amount))
+
+            assert.equal(order.state, 3, 'the order is set to canceled')
+        })
+
+        it("check buyer balance after refund", async function () {
+            assert.equal(oldBuyerBalance.toString(), newBuyerBalance.toString(), "funds correctly send to buyer from smart contract")
+        })
+
+        it("FAILURE CASES checks", async function () {
+            await singlePayment.refundFromSeller(orderCount, { from: deployer }).should.be.rejected
+        })
+    })
+
     describe('check getter functions', async () => {
         it("check contractBalance()", async function () {
             const realContractBalance = await web3.eth.getBalance(singlePayment.address)
@@ -188,7 +232,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             assert.equal(buyer, result, "Owner address is correct")
         })
 
-        it("check getSellerAddress(uitn)", async function () {
+        it("check getSellerAddress(uint)", async function () {
             const result = await singlePayment.getSellerAddress(1)
             assert.equal(seller, result, "Seller address is correct")
         })
@@ -200,7 +244,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
 
         it("check getOrderState(uint)", async function () {
             const result = await singlePayment.getOrderState(2)
-            assert.equal(3, result, "Order state is correct")
+            assert.equal(1, result, "Order state is correct")
         })
 
         
@@ -214,6 +258,39 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             assert.equal(order.amount, amount, "amount is correct")
             assert.equal(order.unlockCode, unlockCode, "Unlock code is correct")
             assert.equal(order.state, state, "state is correct")
+        })
+
+        it("check getOrdersByBuyer(address)", async function() {
+            const buyer_orders = await singlePayment.getOrdersByBuyer(buyer)
+
+            assert.equal(buyer_orders.length, 4, "the orders number is correct")
+            for (let i = 0; i < buyer_orders.length; i++) {
+                assert.equal(buyer_orders[i].sellerAddress, seller, "The seller address is correct")
+                assert.equal(buyer_orders[i].ownerAddress, buyer, "Owner address matches with the buyer address")
+                if(i==0)
+                    assert.equal(buyer_orders[i].state, 2, "the order 1 has state closed")
+                else {
+                    if(i == 1) assert.equal(buyer_orders[i].state, 1, "the order 1 has state filled")
+                    else assert.equal(buyer_orders[i].state, 3, "the other orders states are set to canceled")
+                }
+            }
+        })
+
+        it("check getOrdersBySeller(address)", async function() {
+            const seller_orders = await singlePayment.getOrdersBySeller(seller)
+            
+            assert.equal(seller_orders.length, 4, "the orders number is correct")
+            for (let i = 0; i < seller_orders.length; i++) {
+                assert.equal(seller_orders[i].sellerAddress, seller, "The seller address is correct")
+                assert.equal(seller_orders[i].ownerAddress, buyer, "Owner address matches with the buyer address")
+                if(i==0)
+                    assert.equal(seller_orders[i].state, 2, "the order 1 has state closed")
+                else {
+                    if(i == 1) assert.equal(seller_orders[i].state, 1, "the order 1 has state filled")
+                    else assert.equal(seller_orders[i].state, 3, "the other orders states are set to canceled")
+                }
+            }
+            
         })
         
         // it("check getUnlockCode(uint)", async function () {

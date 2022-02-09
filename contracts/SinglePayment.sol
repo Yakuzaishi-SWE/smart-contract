@@ -60,8 +60,11 @@ contract SinglePayment {
         _;
     }
 
-    modifier condition(bool condition_) {
-        require(condition_, "insufficient funds");
+    modifier validOrderId(uint id) {
+        require(
+            orderCount >= id,
+            "order id isn't valid"
+        );
         _;
     }
 
@@ -137,17 +140,19 @@ contract SinglePayment {
         notItself(_seller, msg.sender)
         enoughFunds(msg.sender, _amount)
     {
+        // check that the _amount isn't negative is unuseful because the request is blocked by the network (it was tested
+        // and the program flow didn't arrive at the control)
         require(
             msg.value >= _amount,
             "Insufficient coin value"
         );
-        require(
-            _amount > 0,
-            "order amount is invalid"
-        );
         orderCount++;
         orders[orderCount] = Order(_seller, payable(msg.sender), _amount, block.number, OrderState.Filled, _orderGUID);
-        // overwrite it
+        
+        // link order to search mappings
+        buyerOrders[msg.sender].push(orderCount);
+        sellerOrders[_seller].push(orderCount);
+
         emit OrderConfirmed(orderCount, _seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
     }
 
@@ -155,6 +160,7 @@ contract SinglePayment {
     /// This will release the locked ether.
     function confirmReceived(uint id, uint _unlockCode)
         external
+        validOrderId(id)
         onlyOwner(id)
         inState(id, OrderState.Filled)
     {
@@ -246,32 +252,24 @@ contract SinglePayment {
     }
 
     function getOrdersByBuyer(address _buyerAddress) external view returns(Order[] memory) {
-        uint[] memory ordersId;
-        ordersId = buyerOrders[_buyerAddress];
+        Order[] memory _buyerOrders = new Order[](buyerOrders[_buyerAddress].length);
 
-        Order[] memory _buyerOrders;
-
-        for(uint i = 0; i < ordersId.length; i++){
-            _buyerOrders[ordersId[i]] = orders[ordersId[i]];
+        for(uint i = 0; i < buyerOrders[_buyerAddress].length; i++){
+            _buyerOrders[i] = orders[buyerOrders[_buyerAddress][i]];
         }
 
         return _buyerOrders;
     }
 
     function getOrdersBySeller(address _sellerAddress) external view returns(Order[] memory) {
-        uint[] memory ordersId;
-        ordersId = sellerOrders[_sellerAddress];
+        Order[] memory _sellerOrders = new Order[](sellerOrders[_sellerAddress].length);
 
-        Order[] memory _sellerOrders;
-
-        for(uint i = 0; i < ordersId.length; i++){
-            _sellerOrders[ordersId[i]] = orders[ordersId[i]];
+        for(uint i = 0; i < sellerOrders[_sellerAddress].length; i++){
+            _sellerOrders[i] = orders[sellerOrders[_sellerAddress][i]];
         }
 
         return _sellerOrders;
     }
-
-    // we have to write a refund from seller too????
 }
 
 // Helper functions are defined outside of a contract
