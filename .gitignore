@@ -104,5 +104,6 @@ dist
 .tern-port
 
 #SMARTCONTRACT
+.vscode/
 abis
 coverage.json
