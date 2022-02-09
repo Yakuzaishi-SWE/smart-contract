@@ -1,0 +1,33 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+        "module": "CommonJS",
+		"moduleResolution": "node",
+		"allowJs": true,
+		"noEmit": false,
+		"strict": true,
+		"esModuleInterop": true,
+		"outDir": "build",
+		"declaration": true,
+		"lib": [
+			"esnext"
+		],
+		"removeComments": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,	
+		"alwaysStrict": true,
+		"allowUnreachableCode": false,
+		"noImplicitAny": false,
+		"downlevelIteration": true,
+		"noImplicitReturns": true,
+		"typeRoots": [
+			"./node_modules/@types",
+		],
+		"noFallthroughCasesInSwitch": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+	},
+	"include": [
+		"src"
+	]
+}
