@@ -19,11 +19,23 @@ async function getGas(_response) {
     return gasUsed;
 }
 
+const OrderState = {
+    NOT_CREATED: 0,
+    CREATED: 1,
+    FILLED: 2,
+    CLOSED: 3,
+    CANCELLED: 4,
+}
+
 contract('SinglePayment', ([deployer, buyer, seller]) => {
     let singlePayment
 
     before(async () => {
         singlePayment = await SinglePayment.deployed({ value: web3.utils.toWei('0.5', 'Ether') })
+    })
+
+    it("mapping undefined", async () => {
+        console.log(await singlePayment.getOrderById(1200));
     })
 
     // check that the deploy is OK
@@ -70,7 +82,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             assert.notEqual(event.unlockCode.toNumber(), 0)
             assert.notEqual(event.unlockCode.toNumber(), null)
             assert.notEqual(event.unlockCode.toNumber(), undefined)
-            assert.equal(event.state, 1, 'order is filled')
+            assert.equal(event.state, OrderState.FILLED, 'order is filled')
         })
 
         it("the contract is filled with the correct amount", async () => {
@@ -102,7 +114,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             const order = await singlePayment.getOrderById(orderCount)
             assert.equal(order.sellerAddress, seller, 'seller address is correct')
             assert.equal(order.ownerAddress, buyer, 'buyer address is correct')
-            assert.equal(order.state, 1, "order state is correct")
+            assert.equal(order.state, OrderState.FILLED, "order state is correct")
             assert.equal(order.orderGUID, "3F2504E0-4F89-11D3-9A0C-0305E82C3301", "Order GUID is correct")
         })
     })
@@ -121,7 +133,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             result = await singlePayment.confirmReceived(1, unlockCode, { from: buyer })
             const event = result.logs[0].args
             const order = await singlePayment.getOrderById(event.id)
-            assert.equal(order.state, 2, 'the order is set to closed')
+            assert.equal(order.state, OrderState.CLOSED, 'the order is set to closed')
 
             let newSellerBalance
             newSellerBalance = await web3.eth.getBalance(seller)   // getBalance and then convert him
@@ -169,7 +181,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
             oldBuyerBalance = await oldBuyerBalance.add(new BN(order.amount))
             newBuyerBalance = newBuyerBalance.add(gasFee)
 
-            assert.equal(order.state, 3, 'the order is set to canceled')
+            assert.equal(order.state, OrderState.CANCELLED, 'the order is set to canceled')
         })
 
         /**
@@ -208,7 +220,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
 
             oldBuyerBalance = await oldBuyerBalance.add(new BN(order.amount))
 
-            assert.equal(order.state, 3, 'the order is set to canceled')
+            assert.equal(order.state, OrderState.CANCELLED, 'the order is set to canceled')
         })
 
         it("check buyer balance after refund", async function () {
@@ -244,7 +256,7 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
 
         it("check getOrderState(uint)", async function () {
             const result = await singlePayment.getOrderState(2)
-            assert.equal(1, result, "Order state is correct")
+            assert.equal(OrderState.FILLED, result, "Order state is correct")
         })
 
         
@@ -268,10 +280,10 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
                 assert.equal(buyer_orders[i].sellerAddress, seller, "The seller address is correct")
                 assert.equal(buyer_orders[i].ownerAddress, buyer, "Owner address matches with the buyer address")
                 if(i==0)
-                    assert.equal(buyer_orders[i].state, 2, "the order 1 has state closed")
+                    assert.equal(buyer_orders[i].state, OrderState.CLOSED, "the order 1 has state closed")
                 else {
-                    if(i == 1) assert.equal(buyer_orders[i].state, 1, "the order 1 has state filled")
-                    else assert.equal(buyer_orders[i].state, 3, "the other orders states are set to canceled")
+                    if(i == 1) assert.equal(buyer_orders[i].state, OrderState.FILLED, "the order 1 has state filled")
+                    else assert.equal(buyer_orders[i].state, OrderState.CANCELLED, "the other orders states are set to canceled")
                 }
             }
         })
@@ -284,10 +296,10 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
                 assert.equal(seller_orders[i].sellerAddress, seller, "The seller address is correct")
                 assert.equal(seller_orders[i].ownerAddress, buyer, "Owner address matches with the buyer address")
                 if(i==0)
-                    assert.equal(seller_orders[i].state, 2, "the order 1 has state closed")
+                    assert.equal(seller_orders[i].state, OrderState.CLOSED, "the order 1 has state closed")
                 else {
-                    if(i == 1) assert.equal(seller_orders[i].state, 1, "the order 1 has state filled")
-                    else assert.equal(seller_orders[i].state, 3, "the other orders states are set to canceled")
+                    if(i == 1) assert.equal(seller_orders[i].state, OrderState.FILLED, "the order 1 has state filled")
+                    else assert.equal(seller_orders[i].state, OrderState.CANCELLED, "the other orders states are set to canceled")
                 }
             }
             

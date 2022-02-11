@@ -10,14 +10,15 @@
     "build"
   ],
   "scripts": {
+    "clean": "rimraf build",
     "prebuild": "npm run clean",
     "prebuild-contract": "truffle compile",
     "build-contract": "truffle migrate",
-    "build": "npm run build-contract && npm run build-typescript",
     "build-typescript": "tsc",
-    "clean": "rimraf build",
+    "build": "npm run build-contract && npm run build-typescript",
     "test": "truffle test",
-    "posttest": "truffle run coverage"
+    "posttest": "truffle run coverage",
+    "chain": "ganache-cli"
   },
   "repository": {
     "type": "git",

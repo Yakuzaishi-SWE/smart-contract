@@ -7,7 +7,7 @@ pragma solidity >=0.7.0 <0.9.0;
  
 contract SinglePayment {
 
-    enum OrderState {Created, Filled, Closed, Canceled}
+    enum OrderState {NotCreated, Created, Filled, Closed, Cancelled}
 
     struct Order {
         address payable sellerAddress;
@@ -57,6 +57,14 @@ contract SinglePayment {
         require(
             orderCount >= id,
             "order id isn't valid"
+        );
+        _;
+    }
+
+    modifier isUniqueId(uint id) {
+        require(
+            orders[id].state == OrderState.NotCreated,
+            "order id already exists"
         );
         _;
     }
@@ -183,7 +191,7 @@ contract SinglePayment {
         // It is important to change the state first because
         // otherwise, the contracts called using `send` below
         // can call in again here.
-        currentOrder.state = OrderState.Canceled;
+        currentOrder.state = OrderState.Cancelled;
         
         // overwrite
         orders[id] = currentOrder;
@@ -201,7 +209,7 @@ contract SinglePayment {
         // It is important to change the state first because
         // otherwise, the contracts called using `send` below
         // can call in again here.
-        currentOrder.state = OrderState.Canceled;
+        currentOrder.state = OrderState.Cancelled;
         
         // overwrite
         orders[id] = currentOrder;
@@ -262,6 +270,10 @@ contract SinglePayment {
         }
 
         return _sellerOrders;
+    }
+
+    function exists(uint id) external view returns(bool) {
+        return uint(orders[id].state) > 0;
     }
 }
 
