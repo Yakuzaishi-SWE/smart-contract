@@ -34,10 +34,6 @@ contract('SinglePayment', ([deployer, buyer, seller]) => {
         singlePayment = await SinglePayment.deployed({ value: web3.utils.toWei('0.5', 'Ether') })
     })
 
-    it("mapping undefined", async () => {
-        console.log(await singlePayment.getOrderById(1200));
-    })
-
     // check that the deploy is OK
     // checks:
     //      1. correct deploy the contract

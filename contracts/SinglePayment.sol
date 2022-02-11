@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 // define which compiler to use
 // VERSION = 1.0.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.7;
 
-//import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
- 
 contract SinglePayment {
 
     enum OrderState {NotCreated, Created, Filled, Closed, Cancelled}
@@ -15,55 +13,51 @@ contract SinglePayment {
         uint amount;
         uint unlockCode;
         OrderState state;
-        string orderGUID;
+    }
+
+    struct OrderTuple {
+        string id;
+        Order order;
     }
 
     // mapping for searching optimization
-    mapping (address => uint[]) private buyerOrders;
-    mapping (address => uint[]) private sellerOrders;
+    mapping (address => string[]) private buyerOrders;
+    mapping (address => string[]) private sellerOrders;
     // mapping for orders
     uint private orderCount = 0;
-    mapping (uint => Order) private orders;
+    mapping (string => Order) private orders;
 
     /**************************************
      *             MODIFIER
      *************************************/
 
-    modifier onlyOwner(uint id) {
+    modifier onlyOwner(string memory id) {
         require(
-            msg.sender == orders[id].ownerAddress, 
+            address(orders[id].ownerAddress) == address(msg.sender), 
             "only the owner can call this function"
         );
         _;
     }
 
-    modifier onlySeller(uint id) {
+    modifier onlySeller(string memory id) {
         require(
-            msg.sender == orders[id].sellerAddress, 
+            orders[id].sellerAddress == msg.sender, 
             "only the seller can call this function"
         );
         _;
     }
 
-    modifier inState(uint id, OrderState state_) {
+    modifier inState(string memory id, OrderState state_) {
         require(
-            orders[id].state == state_, 
+            state_ == orders[id].state, 
             "the order hasn't the valid state"
         );
         _;
     }
 
-    modifier validOrderId(uint id) {
+    modifier isUniqueId(string memory id) {
         require(
-            orderCount >= id,
-            "order id isn't valid"
-        );
-        _;
-    }
-
-    modifier isUniqueId(uint id) {
-        require(
-            orders[id].state == OrderState.NotCreated,
+            OrderState.NotCreated == orders[id].state,
             "order id already exists"
         );
         _;
@@ -88,14 +82,13 @@ contract SinglePayment {
     /**************************************
      *              EVENTS
      *************************************/
-    event Aborted();
-
+    
     event OrderCreated (
-        uint id
+        string id
     );
 
     event OrderConfirmed(
-        uint id,
+        string id,
         address payable sellerAddress,
         address payable ownerAddress,
         uint amount,
@@ -104,11 +97,11 @@ contract SinglePayment {
     );
 
     event ItemReceived(
-        uint id
+        string id
     );
 
     event OwnerRefunded(
-        uint id
+        string id
     );
 
     /**************************************
@@ -135,11 +128,12 @@ contract SinglePayment {
     /// Confirm the purchase as buyer.
     /// The ether will be locked until confirmReceived
     /// is called.
-    function newOrder(address payable _seller, uint _amount, string memory _orderGUID)
+    function newOrder(address payable _seller, uint _amount, string memory _orderId)
         external
         payable
         notItself(_seller, msg.sender)
         enoughFunds(msg.sender, _amount)
+        isUniqueId(_orderId)
     {
         // check that the _amount isn't negative is unuseful because the request is blocked by the network (it was tested
         // and the program flow didn't arrive at the control)
@@ -148,20 +142,19 @@ contract SinglePayment {
             "Insufficient coin value"
         );
         orderCount++;
-        orders[orderCount] = Order(_seller, payable(msg.sender), _amount, block.number, OrderState.Filled, _orderGUID);
+        orders[_orderId] = Order(_seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
         
         // link order to search mappings
-        buyerOrders[msg.sender].push(orderCount);
-        sellerOrders[_seller].push(orderCount);
+        buyerOrders[msg.sender].push(_orderId);
+        sellerOrders[_seller].push(_orderId);
 
-        emit OrderConfirmed(orderCount, _seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
+        emit OrderConfirmed(_orderId, _seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
     }
 
     /// Confirm that the smart contract's owner received the item.
     /// This will release the locked ether.
-    function confirmReceived(uint id, uint _unlockCode)
+    function confirmReceived(string memory id, uint _unlockCode)
         external
-        validOrderId(id)
         onlyOwner(id)
         inState(id, OrderState.Filled)
     {
@@ -181,7 +174,7 @@ contract SinglePayment {
 
     /// Refound owner if he decided to cancel the order before
     /// the Closed state (before unlock)
-    function refundFromOwner(uint id)
+    function refundFromOwner(string memory id)
         external
         onlyOwner(id)
         inState(id, OrderState.Filled)
@@ -199,7 +192,7 @@ contract SinglePayment {
     }
 
     /// Refound owner if the seller decides to cancel the order
-    function refundFromSeller(uint id)
+    function refundFromSeller(string memory id)
         external
         onlySeller(id)
         inState(id, OrderState.Filled)
@@ -228,51 +221,51 @@ contract SinglePayment {
         return address(this).balance;
     }
 
-    function getOwnerAddress(uint id) external view returns(address) {
+    function getOwnerAddress(string memory id) external view returns(address) {
         return orders[id].ownerAddress;
     }
 
-    function getSellerAddress(uint id) external view returns(address) {
+    function getSellerAddress(string memory id) external view returns(address) {
         return orders[id].sellerAddress;
     }
 
-    function getAmountToPay(uint id) external view returns(uint) {
+    function getAmountToPay(string memory id) external view returns(uint) {
         return orders[id].amount;
     }
 
-    function getOrderState(uint id) external view returns(OrderState) {
+    function getOrderState(string memory id) external view returns(OrderState) {
         return orders[id].state;
     }
 
-    function getUnlockCode(uint id) external view returns(uint) {
+    function getUnlockCode(string memory id) external view returns(uint) {
         return orders[id].unlockCode;
     }
 
-    function getOrderById(uint id) external view returns(Order memory) {
+    function getOrderById(string memory id) external view returns(Order memory) {
         return orders[id];
     }
 
-    function getOrdersByBuyer(address _buyerAddress) external view returns(Order[] memory) {
-        Order[] memory _buyerOrders = new Order[](buyerOrders[_buyerAddress].length);
+    function getOrdersByBuyer(address _buyerAddress) external view returns(OrderTuple[] memory) {
+        OrderTuple[] memory _buyerOrders = new OrderTuple[](sellerOrders[_buyerAddress].length);
 
-        for(uint i = 0; i < buyerOrders[_buyerAddress].length; i++){
-            _buyerOrders[i] = orders[buyerOrders[_buyerAddress][i]];
+        for(uint i = 0; i < sellerOrders[_buyerAddress].length; i++){
+            _buyerOrders[i] = OrderTuple(sellerOrders[_buyerAddress][i], orders[sellerOrders[_buyerAddress][i]]);
         }
 
         return _buyerOrders;
     }
 
-    function getOrdersBySeller(address _sellerAddress) external view returns(Order[] memory) {
-        Order[] memory _sellerOrders = new Order[](sellerOrders[_sellerAddress].length);
+    function getOrdersBySeller(address _sellerAddress) external view returns(OrderTuple[] memory) {
+        OrderTuple[] memory _sellerOrders = new OrderTuple[](sellerOrders[_sellerAddress].length);
 
         for(uint i = 0; i < sellerOrders[_sellerAddress].length; i++){
-            _sellerOrders[i] = orders[sellerOrders[_sellerAddress][i]];
+            _sellerOrders[i] = OrderTuple(sellerOrders[_sellerAddress][i], orders[sellerOrders[_sellerAddress][i]]);
         }
 
         return _sellerOrders;
     }
 
-    function exists(uint id) external view returns(bool) {
+    function exists(string memory id) external view returns(bool) {
         return uint(orders[id].state) > 0;
     }
 }
