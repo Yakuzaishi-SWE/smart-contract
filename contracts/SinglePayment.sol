@@ -25,13 +25,6 @@ contract SinglePayment {
     uint private orderCount = 0;
     mapping (uint => Order) private orders;
 
-    /// only the owner of the contract can call this function
-    error OnlyOwner();
-    /// only the seller can call this function
-    error OnlySeller();
-    /// The function cannot be called at the current state.
-    error InvalidState();
-
     /**************************************
      *             MODIFIER
      *************************************/

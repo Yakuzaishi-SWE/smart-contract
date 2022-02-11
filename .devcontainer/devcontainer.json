@@ -6,7 +6,8 @@
 	"settings": {},
 	"extensions": [
 		"juanblanco.solidity",
-		"donjayamanne.githistory"
+		"donjayamanne.githistory",
+		"trailofbits.slither-vscode"
 	],
 	"remoteUser": "node",
 	"features": {

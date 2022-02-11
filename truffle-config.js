@@ -43,7 +43,7 @@ module.exports = {
 
   // Configure directories
   contracts_directory: './contracts/',
-  contracts_build_directory: './abis/',
+  //contracts_build_directory: './abis/',
 
   // Configure your compilers
   compilers: {
