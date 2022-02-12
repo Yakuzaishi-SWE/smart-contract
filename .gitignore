@@ -108,3 +108,5 @@ build
 .vscode/
 abis
 coverage.json
+
+.DS_Store
