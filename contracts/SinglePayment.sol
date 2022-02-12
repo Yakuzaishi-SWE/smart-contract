@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // define which compiler to use
 // VERSION = 1.0.0
-pragma solidity 0.8.7;
+pragma solidity >=0.7.0 <=0.8.11;   // version with major support and testing
 
 contract SinglePayment {
 
@@ -33,7 +33,7 @@ contract SinglePayment {
 
     modifier onlyOwner(string memory id) {
         require(
-            address(orders[id].ownerAddress) == address(msg.sender), 
+            address(orders[id].ownerAddress) == msg.sender, 
             "only the owner can call this function"
         );
         _;
@@ -41,7 +41,7 @@ contract SinglePayment {
 
     modifier onlySeller(string memory id) {
         require(
-            orders[id].sellerAddress == msg.sender, 
+            address(orders[id].sellerAddress) == msg.sender, 
             "only the seller can call this function"
         );
         _;
@@ -49,7 +49,7 @@ contract SinglePayment {
 
     modifier inState(string memory id, OrderState state_) {
         require(
-            state_ == orders[id].state, 
+            uint(state_) == uint(orders[id].state), 
             "the order hasn't the valid state"
         );
         _;
@@ -160,7 +160,7 @@ contract SinglePayment {
     {
         Order memory currentOrder = orders[id];
         require(
-            _unlockCode == currentOrder.unlockCode,
+            currentOrder.unlockCode == _unlockCode,
             "Invalid unlock code"
         );
 
@@ -246,10 +246,10 @@ contract SinglePayment {
     }
 
     function getOrdersByBuyer(address _buyerAddress) external view returns(OrderTuple[] memory) {
-        OrderTuple[] memory _buyerOrders = new OrderTuple[](sellerOrders[_buyerAddress].length);
+        OrderTuple[] memory _buyerOrders = new OrderTuple[](buyerOrders[_buyerAddress].length);
 
-        for(uint i = 0; i < sellerOrders[_buyerAddress].length; i++){
-            _buyerOrders[i] = OrderTuple(sellerOrders[_buyerAddress][i], orders[sellerOrders[_buyerAddress][i]]);
+        for(uint i = 0; i < buyerOrders[_buyerAddress].length; i++){
+            _buyerOrders[i] = OrderTuple(buyerOrders[_buyerAddress][i], orders[buyerOrders[_buyerAddress][i]]);
         }
 
         return _buyerOrders;
@@ -263,10 +263,6 @@ contract SinglePayment {
         }
 
         return _sellerOrders;
-    }
-
-    function exists(string memory id) external view returns(bool) {
-        return uint(orders[id].state) > 0;
     }
 }
 
