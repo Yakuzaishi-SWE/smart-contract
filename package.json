@@ -1,23 +1,23 @@
 {
   "name": "smart-contract",
   "version": "0.0.0",
-  "description": "Smart Contract per Shopchain",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
-  "module": "./build/index.js",
+  "description": "Smart Contract per ShopChain",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "module": "./dist/src/index.js",
   "files": [
-    "abis",
-    "build"
+    "dist"
   ],
   "scripts": {
-    "clean": "rimraf build",
+    "clean": "rimraf build && rimraf dist && rimraf coverage && rimraf coverage",
     "prebuild": "npm run clean",
-    "prebuild-contract": "truffle compile",
-    "build-contract": "truffle migrate",
+    "build-contract": "truffle compile",
+    "migrate": "truffle migrate",
     "build-typescript": "tsc",
     "build": "npm run build-contract && npm run build-typescript",
     "test": "truffle test",
     "posttest": "truffle run coverage",
+    "prepare": "npm run build",
     "chain": "ganache-cli"
   },
   "repository": {
@@ -31,19 +31,24 @@
   },
   "homepage": "https://github.com/Yakuzaishi-SWE/smart-contract#readme",
   "devDependencies": {
-    "@openzeppelin/contracts": "^4.4.2",
-    "@openzeppelin/test-helpers": "^0.5.15",
     "@truffle/hdwallet-provider": "^2.0.3",
+    "bignumber.js": "^9.0.2",
     "chai": "^4.3.6",
     "chai-as-promised": "7.1.1",
+    "ganache-cli": "^6.12.2",
+    "json-loader": "^0.5.7",
     "mocha": "^9.2.0",
     "rimraf": "^3.0.2",
     "solidity-coverage": "^0.7.18",
     "truffle": "5.4.33",
+    "ts-loader": "^9.2.6",
     "typescript": "^4.5.5",
-    "web3": "1.7.0"
+    "web3": "^1.7.0",
+    "webpack": "^5.61.0",
+    "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "web3-eth-contract": "^1.7.0"
+    "web3-eth-contract": "^1.7.0",
+    "web3-utils": "^1.7.0"
   }
 }

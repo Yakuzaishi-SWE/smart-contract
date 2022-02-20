@@ -1,5 +1,5 @@
-const SinglePayment = artifacts.require("SinglePayment");
+const ShopChain = artifacts.require("ShopChain");
 
 module.exports = function(deployer) {
-  deployer.deploy(SinglePayment);
+  deployer.deploy(ShopChain);
 };

@@ -3,11 +3,9 @@
 		"target": "es5",
         "module": "CommonJS",
 		"moduleResolution": "node",
-		"allowJs": true,
-		"noEmit": false,
 		"strict": true,
 		"esModuleInterop": true,
-		"outDir": "build",
+		"outDir": "dist",
 		"declaration": true,
 		"lib": [
 			"esnext"
@@ -28,6 +26,6 @@
 		"resolveJsonModule": true,
 	},
 	"include": [
-		"src"
+		"./src/**/*.ts"
 	]
 }

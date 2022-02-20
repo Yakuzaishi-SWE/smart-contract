@@ -1,4 +1,8 @@
 import { Contract } from "web3-eth-contract";
+import { AbiItem } from "web3-utils";
+import SP from '../build/contracts/ShopChain.json';
+
+export const loadAbis = (): AbiItem[] => { return SP as unknown as AbiItem[]; }
 
 class ContractService {
     constructor(private readonly contract: Contract) { }
@@ -9,28 +13,28 @@ class ContractService {
      * 
      ****************************************************************/
 
-    async newOrder(buyer: string, { seller, amount, t_id }: {seller: string, amount: number, t_id: string }): Promise<object> {
+    async newOrder(buyer: string, { seller, amount, t_id }: { seller: string, amount: number, t_id: string }): Promise<object> {
         return await this.contract.methods
             .newOrder(seller, amount, t_id)
             .send({ from: buyer, value: amount });
     }
 
-    async confirmReceived(buyer: string, {order_id, unlockCode}: {order_id: number, unlockCode: number}): Promise<object> {
+    async confirmReceived(buyer: string, { order_id, unlockCode }: { order_id: number, unlockCode: number }): Promise<object> {
         return await this.contract.methods
             .confirmReceived(order_id, unlockCode)
-            .send({from: buyer});
+            .send({ from: buyer });
     }
 
-    async refundFromOwner(buyer: string, {order_id}: {order_id: number}): Promise<object> {
+    async refundFromOwner(buyer: string, { order_id }: { order_id: number }): Promise<object> {
         return await this.contract.methods
             .refundFromOwner(order_id)
-            .send({from: buyer});
+            .send({ from: buyer });
     }
 
-    async refundFromSeller(seller: string, {order_id}: {order_id: number}): Promise<object> {
+    async refundFromSeller(seller: string, { order_id }: { order_id: number }): Promise<object> {
         return await this.contract.methods
             .refundFromSeller(order_id)
-            .send({from: seller});
+            .send({ from: seller });
     }
 
     /*****************************************************************

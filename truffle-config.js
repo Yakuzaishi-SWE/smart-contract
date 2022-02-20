@@ -13,33 +13,24 @@ module.exports = {
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
     //
-    /*
     development: {
-       host: "localhost",     // Localhost (default: none)
-       port: 8545,            // Standard Ethereum port (default: none)
-       network_id: "*",       // Any network (default: none)
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 8545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
     },
-    */
     FTMtestnet: {
-      provider: () => 
-      new HDWalletProvider({
-        mnemonic: {
-          phrase: mnemonicPhrase
-        }, 
-        providerOrUrl: "https://rpc.testnet.fantom.network/",
-        numberOfAddresses: 1,
-        shareNonce: true,
-        derivationPath: "m/44'/1'/0'/0/"
-      }),
+      provider: () =>
+        new HDWalletProvider({
+          mnemonic: {
+            phrase: mnemonicPhrase
+          },
+          providerOrUrl: "https://rpc.testnet.fantom.network/",
+          numberOfAddresses: 1,
+          shareNonce: true,
+          derivationPath: "m/44'/1'/0'/0/"
+        }),
       network_id: 4002
     }
-  },
-
-  // Set default mocha options here, use special reporters etc.
-  mocha: {
-    // timeout: 100000
-    grep: "@skip-on-coverage",  // Find everything with this tag
-    invert: true                // Run the grep's inverse set.
   },
 
   // Configure directories
@@ -56,7 +47,7 @@ module.exports = {
           enabled: true,
           runs: 200
         },
-      //  evmVersion: "byzantium"
+        //  evmVersion: "byzantium"
       }
     }
   },
