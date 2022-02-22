@@ -2,13 +2,12 @@
 	"name": "ShopChain Smart Contract",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"args": {
-			"VARIANT": "16"
-		}
 	},
 	"settings": {},
 	"extensions": [
-		"juanblanco.solidity"
+		"juanblanco.solidity",
+		"donjayamanne.githistory",
+		"trailofbits.slither-vscode"
 	],
 	"remoteUser": "node",
 	"features": {
