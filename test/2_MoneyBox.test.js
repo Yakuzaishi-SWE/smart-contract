@@ -46,10 +46,28 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
     describe("new moneybox creation", () => {
         it('moneybox created correctly', async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
+
+            const moneybox = await contract.getOrderById(id1)
+
+            // Check moneybox data
+            assert.equal(moneybox.ownerAddress, buyer, 'owner address isn\'t correct')
+            assert.equal(moneybox.sellerAddress, seller, "seller address isn\'t correct")
+            assert.equal(moneybox.amount, ether_1, 'amount isn\'t correct')
+            assert.notEqual(moneybox.unlockCode, 0)
+            assert.equal(moneybox.state, OrderState.CREATED, 'order isn\'t in created state')
         })
     })
 
-    it("creation test", async () => {
+    describe("check getter functions", () => {
+        it("check getAmountToFill(string)", async function () {
+            await contract.newOrder(seller, ether_1, id1, { from: buyer })
+            const amount_to_fill = await contract.getAmountToFill(id1)
+
+            assert.equal(amount_to_fill, ether_1, 'The moneybox hasn\'t the right amount to pay')
+        })
+    })
+
+    it("begginer test", async () => {
         /*
         await mb_contract.newOrder(seller, ether_1, id1, {from: buyer})
         await mb_contract.newOrder(seller, ether_half, "00000-00000", {from: buyer2})

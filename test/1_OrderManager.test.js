@@ -52,11 +52,11 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
 
             const order = await contract.getOrderById(id1);
 
-            assert.equal(order.ownerAddress, buyer, 'owner address is correct')
-            assert.equal(order.sellerAddress, seller, "seller address is correct")
-            assert.equal(order.amount, ether_1, 'amount is correct')
+            assert.equal(order.ownerAddress, buyer, 'owner address isn\'t correct')
+            assert.equal(order.sellerAddress, seller, "seller address isn\'t correct")
+            assert.equal(order.amount, ether_1, 'amount isn\'t correct')
             assert.notEqual(order.unlockCode, 0)
-            assert.equal(order.state, OrderState.FILLED, 'order is filled')
+            assert.equal(order.state, OrderState.FILLED, 'order isn\'t in filled state')
         })
 
         it("the contract is filled with the correct amount", async () => {
