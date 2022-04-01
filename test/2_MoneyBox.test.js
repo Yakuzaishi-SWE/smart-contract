@@ -102,6 +102,23 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
             assert.equal(order1.ownerAddress, buyer, "Owner address matches with the buyer address")
         })
 
+        it("check getAllSellerOrders(OrderManager, address)", async () => {
+            await contract.newOrder(seller, ether_1, id1, { from: buyer })
+            await contract.newOrder(seller, ether_1, id2, { from: buyer2 })
+            
+            const seller_orders = await contract.getAllSellerOrders(order_manager.address, seller)
+            assert.equal(seller_orders.length, 2, "the orders number is correct")
+            
+            const order1 = seller_orders[0].order;
+            assert.equal(seller_orders[0].id, id1, "The order id is correct")
+            assert.equal(order1.sellerAddress, seller, "The seller address is correct")
+            assert.equal(order1.ownerAddress, buyer, "Owner address matches with the buyer address")
+            const order2 = seller_orders[1].order;
+            assert.equal(seller_orders[1].id, id2, "The order id is correct")
+            assert.equal(order2.sellerAddress, seller, "The seller address is correct")
+            assert.equal(order2.ownerAddress, buyer2, "Owner address matches with the buyer address")
+        })
+
     })
 
     it("begginer test", async () => {
