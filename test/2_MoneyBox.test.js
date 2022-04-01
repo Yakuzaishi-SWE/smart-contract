@@ -43,7 +43,7 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
         assert.equal(count, 0)
     });
 
-    describe("new moneybox creation", () => {
+    describe("moneybox management", () => {
 
         it('moneybox created correctly', async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
@@ -57,27 +57,30 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
             assert.notEqual(moneybox.unlockCode, 0)
             assert.equal(moneybox.state, OrderState.CREATED, 'order isn\'t in created state')
         })
-        it("new fee transfer", async () => {
+
+        it("new fee transfer into moneybox", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
-            await contract.newPayment(id1, ether_half,{ from: buyer2, value: ether_half })
+            await contract.newPayment(id1, ether_half, { from: buyer2, value: ether_half })
             const amount_to_fill = await contract.getAmountToFill(id1)  
             assert.equal(amount_to_fill, ether_half, "The moneybox doesn't have the right amount to pay")
         });
-    })
-    describe("failure cases", () =>{
-        it("should not have insufficent value", async () => {
-            await contract.newOrder(seller, ether_1, id1, { from: buyer })
-            await contract.newPayment(id1, ether_half,{ from: buyer2, value: 1 }).should.be.rejected;
+
+        describe("failure cases", () =>{
+            it("should not have insufficent value", async () => {
+                await contract.newOrder(seller, ether_1, id1, { from: buyer })
+                await contract.newPayment(id1, ether_half, { from: buyer2, value: 1 }).should.be.rejected;
+            })
         })
     })
 
     describe("check getter functions", () => {
-        it("check getAmountToFill(string)", async function () {
+        it("check getAmountToFill(string)", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
             const amount_to_fill = await contract.getAmountToFill(id1)
 
             assert.equal(amount_to_fill, ether_1, 'The moneybox hasn\'t the right amount to pay')
         })
+
         /*it("check getMoneyBoxPayments", async function () {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
             const payment1 = await contract.newPayment(id1, ether_half,{ from: buyer2, value: ether_half })
@@ -85,11 +88,14 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
             const moneybox = await getOrderById(id1)
             assert.equal(moneybox.getMoneyBoxPayments(payment1).from, buyer2, "buyer is correct")
         })*/
-        it("check getAllBuyerOrders(supercontract, _buyerAddress)", async function () {
+        
+        it("check getAllBuyerOrders(supercontract, _buyerAddress)", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
-            await contract.newPayment(id1, ether_half,{ from: buyer2, value: ether_half })
-            const buyer_orders = await contract.getAllBuyerOrders(order_manager.address, buyer2)
-            assert.equal(buyer_orders.length, 1, "the orders number is correct")
+            await contract.newOrder(seller, ether_1, id2, { from: buyer })
+            
+            const buyer_orders = await contract.getAllBuyerOrders(order_manager.address, buyer)
+            assert.equal(buyer_orders.length, 2, "the orders number is correct")
+            
             const order1 = buyer_orders[0].order;
             assert.equal(buyer_orders[0].id, id1, "The order id is correct")
             assert.equal(order1.sellerAddress, seller, "The seller address is correct")
@@ -99,8 +105,10 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
     })
 
     it("begginer test", async () => {
+        
         /*
-        await mb_contract.newOrder(seller, ether_1, id1, {from: buyer})
+        const result = await mb_contract.newOrder(seller, ether_1, id1, {from: buyer})
+        console.log(result)
         await mb_contract.newOrder(seller, ether_half, "00000-00000", {from: buyer2})
         await sp_contract.newOrder(seller, ether_1, id2, {from: buyer2, value: ether_1})
         await sp_contract.newOrder(seller, ether_1, "123456", {from: buyer2, value: ether_1})

@@ -27,6 +27,13 @@ contract MoneyBoxManager is OrderManager {
         _;
     }
 
+    /**************************************
+     *              EVENTS
+     *************************************/
+    
+    event NewPayment (
+        string id
+    );
 
     /**************************************
      *             FUNCTIONS
@@ -64,6 +71,8 @@ contract MoneyBoxManager is OrderManager {
         payments[moneyBoxId].push(
             Payment(payable(msg.sender), _feeAmount, block.timestamp)
         );
+
+        emit NewPayment(moneyBoxId);
     }
 
     function refund(string memory id)
