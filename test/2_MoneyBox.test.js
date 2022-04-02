@@ -21,6 +21,7 @@ const id1 = "3F2504E0-4F89-11D3-9A0C-0305E82C3301";
 const id2 = "3F2504E0-4F89-11D3-9A0C-0305E82C3312";
 const ether_1 = web3.utils.toWei('1', 'Ether');
 const ether_half = web3.utils.toWei('.5', 'Ether');
+const ether_quart = web3.utils.toWei('.25', 'Ether')
 const ether_big = web3.utils.toWei('1000', 'Ether');
 
 async function getGas(_response) {
@@ -74,6 +75,21 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
     })
 
     describe("check getter functions", () => {
+        it("check getMoneyBoxPayments(string)", async () => {
+            await contract.newOrder(seller, ether_1, id1, { from: buyer })
+            await contract.newPayment(id1, ether_quart, { from: buyer, value: ether_quart })
+            await contract.newPayment(id1, ether_half, { from: buyer2, value: ether_half })
+
+            const payments = await contract.getMoneyBoxPayments(id1)
+
+            assert.equal(payments[0].from, buyer, 'First fee id is correct')
+            assert.equal(payments[0].feeAmount, ether_quart, 'First fee amount is correct')
+            //assert.equal(payments[0].dateTime, )
+            assert.equal(payments[1].from, buyer2, 'Second fee id is correct')
+            assert.equal(payments[1].feeAmount, ether_half, 'Second fee amount is correct')
+            //assert.equal(payments[0].dateTime, )
+        })
+        
         it("check getAmountToFill(string)", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
             const amount_to_fill = await contract.getAmountToFill(id1)
@@ -120,6 +136,8 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
         })
 
     })
+
+    
 
     it("begginer test", async () => {
         
