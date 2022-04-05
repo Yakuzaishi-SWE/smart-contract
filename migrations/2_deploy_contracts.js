@@ -1,4 +1,4 @@
-const ShopChain = artifacts.require("ShopChain");
+//const ShopChain = artifacts.require("ShopChain");
 const OrderManager = artifacts.require("OrderManager");
 const MoneyBoxManager = artifacts.require("MoneyBoxManager");
 

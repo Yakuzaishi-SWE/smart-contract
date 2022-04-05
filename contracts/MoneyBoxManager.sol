@@ -19,10 +19,10 @@ contract MoneyBoxManager is OrderManager {
      *             MODIFIERS
      *************************************/
 
-    modifier moneyBoxNotClosed(string memory id) {
+    modifier moneyBoxNotClosedOrCancelled(string memory id) {
         require(
-            OrderManager.orders[id].state != OrderState.Closed,
-            "MoneyBox is closed, you can't call this function when it's in this state"
+            OrderManager.orders[id].state != OrderState.Closed && OrderManager.orders[id].state != OrderState.Cancelled,
+            "MoneyBox is closed or cancelled, you can't call this function when it's in one of these states"
         );
         _;
     }
@@ -72,6 +72,9 @@ contract MoneyBoxManager is OrderManager {
             Payment(payable(msg.sender), _feeAmount, block.timestamp)
         );
 
+        if(this.getAmountToFill(moneyBoxId) <= 0)
+            orders[moneyBoxId].state = OrderState.Filled;
+
         emit NewPayment(moneyBoxId);
     }
 
@@ -79,7 +82,7 @@ contract MoneyBoxManager is OrderManager {
         override
         external
         isOwnerOrSeller(id)
-        moneyBoxNotClosed(id)
+        moneyBoxNotClosedOrCancelled(id)
     {
         Payment[] memory ps = payments[id];
         for (uint i = 0; i < ps.length; i++) {

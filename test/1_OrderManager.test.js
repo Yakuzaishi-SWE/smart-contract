@@ -6,7 +6,6 @@ require('chai')
     .use(require('chai-as-promised'))
     .should()
 
-const ShopChain = artifacts.require('./ShopChain.sol')
 const OrderManager = artifacts.require('./OrderManager.sol')
 const MoneyBoxManager = artifacts.require('./MoneyBoxManager.sol')
 
@@ -34,7 +33,6 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
     let contract, mb_contract;
 
     beforeEach(async () => {
-        //contract = await ShopChain.new();
         contract = await OrderManager.new();
     });
 
