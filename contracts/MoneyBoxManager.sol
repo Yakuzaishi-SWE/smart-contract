@@ -3,7 +3,7 @@
 // VERSION = 1.0.0
 import "./OrderManager.sol";
 
-pragma solidity >=0.7.0 <=0.8.12;   // version with major support and testing
+pragma solidity >=0.7.0 <=0.8.13;   // version with major support and testing
 
 contract MoneyBoxManager is OrderManager {
 
@@ -59,7 +59,7 @@ contract MoneyBoxManager is OrderManager {
         OrderManager.sellerOrders[_seller].push(_orderId);
 
         if(msg.value > 0){
-            this.newPayment(_orderId, msg.value);
+            this.newPayment{ value: msg.value }(_orderId, msg.value);
         }
 
         emit OrderCreated(_orderId, _seller, payable(msg.sender), _amount, block.timestamp, OrderState.Created);

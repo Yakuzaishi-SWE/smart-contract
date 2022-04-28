@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // define which compiler to use
 // VERSION = 2.1.1
-pragma solidity >=0.7.0 <=0.8.12;   // version with major support and testing
+pragma solidity >=0.7.0 <=0.8.13;   // version with major support and testing
 
 contract OrderManager {
 
