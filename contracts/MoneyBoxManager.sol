@@ -31,7 +31,7 @@ contract MoneyBoxManager is OrderManager {
      *              EVENTS
      *************************************/
     
-    event NewPayment (
+    event NewPaymentCreated (
         string moneybox_id,
         uint fee_amount,
         address owner,
@@ -58,7 +58,12 @@ contract MoneyBoxManager is OrderManager {
         OrderManager.buyerOrders[msg.sender].push(_orderId);
         OrderManager.sellerOrders[_seller].push(_orderId);
 
+        if(msg.value > 0){
+            this.newPayment(_orderId, msg.value);
+        }
+
         emit OrderCreated(_orderId, _seller, payable(msg.sender), _amount, block.timestamp, OrderState.Created);
+
     }
 
     // this function miss the control of valid moneybox id
@@ -79,7 +84,7 @@ contract MoneyBoxManager is OrderManager {
         if(this.getAmountToFill(moneyBoxId) <= 0)
             orders[moneyBoxId].state = OrderState.Filled;
 
-        emit NewPayment(moneyBoxId, _amount, msg.sender, block.timestamp);
+        emit NewPaymentCreated(moneyBoxId, _amount, msg.sender, block.timestamp);
     }
 
     function refund(string memory id)

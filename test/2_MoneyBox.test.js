@@ -59,6 +59,17 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
             assert.equal(moneybox.state, OrderState.CREATED, 'order isn\'t in created state')
         })
 
+        it('user sends import at moneybox creation', async () => {
+            await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_half })
+
+            const payments = await contract.getMoneyBoxPayments(id1)
+
+            assert.equal(payments.length, 1, "The moneybox doesn't have the right number of payments")
+            assert.equal(payments[0], ether_half, "The value isn't correct")
+
+            
+        })
+
         it("new fee transfer into moneybox", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
             await contract.newPayment(id1, ether_half, { from: buyer2, value: ether_half })
