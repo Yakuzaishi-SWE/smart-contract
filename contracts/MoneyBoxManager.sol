@@ -9,8 +9,8 @@ contract MoneyBoxManager is OrderManager {
 
     struct Payment {
         address payable from;
-        uint feeAmount;
-        uint256 datetime;
+        uint amount;
+        uint256 timestamp;
     }
 
     mapping (string => Payment[]) private payments;
@@ -32,7 +32,11 @@ contract MoneyBoxManager is OrderManager {
      *************************************/
     
     event NewPayment (
-        string id
+        string moneybox_id,
+        uint fee_amount,
+        address owner,
+        uint256 timestamp
+
     );
 
     /**************************************
@@ -54,28 +58,28 @@ contract MoneyBoxManager is OrderManager {
         OrderManager.buyerOrders[msg.sender].push(_orderId);
         OrderManager.sellerOrders[_seller].push(_orderId);
 
-        emit OrderCreated(_orderId);
+        emit OrderCreated(_orderId, _seller, payable(msg.sender), _amount, block.timestamp, OrderState.Created);
     }
 
     // this function miss the control of valid moneybox id
-    function newPayment(string memory moneyBoxId, uint _feeAmount) 
+    function newPayment(string memory moneyBoxId, uint _amount) 
         external
         payable
-        enoughFunds(msg.sender, _feeAmount)
+        enoughFunds(msg.sender, _amount)
     {
         require(
-            msg.value >= _feeAmount,
+            msg.value >= _amount,
             "Insufficient coin value"
         );
 
         payments[moneyBoxId].push(
-            Payment(payable(msg.sender), _feeAmount, block.timestamp)
+            Payment(payable(msg.sender), _amount, block.timestamp)
         );
 
         if(this.getAmountToFill(moneyBoxId) <= 0)
             orders[moneyBoxId].state = OrderState.Filled;
 
-        emit NewPayment(moneyBoxId);
+        emit NewPayment(moneyBoxId, _amount, msg.sender, block.timestamp);
     }
 
     function refund(string memory id)
@@ -86,10 +90,10 @@ contract MoneyBoxManager is OrderManager {
     {
         Payment[] memory ps = payments[id];
         for (uint i = 0; i < ps.length; i++) {
-            ps[i].from.transfer(ps[i].feeAmount);
+            ps[i].from.transfer(ps[i].amount);
         }
         orders[id].state = OrderState.Cancelled;
-        emit OwnerRefunded(id);
+        emit OwnerRefunded(id, orders[id].sellerAddress, orders[id].ownerAddress, orders[id].amount, block.timestamp, OrderState.Cancelled);
     }
 
     // facciamo il rimborso per il singolo utente partecipante??? Da aggiungere in analisi dei requisiti
@@ -116,7 +120,7 @@ contract MoneyBoxManager is OrderManager {
         uint paid = 0;
         Payment[] memory ps = payments[id];
         for (uint i = 0; i < ps.length; i++) {
-            paid += ps[i].feeAmount;
+            paid += ps[i].amount;
         }
 
         return total-paid;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 // define which compiler to use
-// VERSION = 1.0.0
+// VERSION = 2.1.1
 pragma solidity >=0.7.0 <=0.8.12;   // version with major support and testing
 
 contract OrderManager {
@@ -12,7 +12,7 @@ contract OrderManager {
         address payable ownerAddress;
         uint amount;
         uint unlockCode;
-        uint256 datetime;
+        uint256 timestamp;
         OrderState state;
     }
 
@@ -94,24 +94,39 @@ contract OrderManager {
      *************************************/
     
     event OrderCreated (
-        string id
+        string id,
+        address payable sellerAddress,
+        address payable ownerAddress,
+        uint indexed amount,
+        uint256 indexed timestamp,
+        OrderState indexed state
     );
 
     event OrderConfirmed(
         string id,
         address payable sellerAddress,
         address payable ownerAddress,
-        uint amount,
-        uint unlockCode,
-        OrderState state
+        uint indexed amount,
+        uint256 indexed timestamp,
+        OrderState indexed state
     );
 
     event ItemReceived(
-        string id
+        string id,
+        address payable sellerAddress,
+        address payable ownerAddress,
+        uint indexed amount,
+        uint256 indexed timestamp,
+        OrderState indexed state
     );
 
     event OwnerRefunded(
-        string id
+        string id,
+        address payable sellerAddress,
+        address payable ownerAddress,
+        uint indexed amount,
+        uint256 indexed timestamp,
+        OrderState indexed state
     );
 
     /**************************************
@@ -142,7 +157,7 @@ contract OrderManager {
         buyerOrders[msg.sender].push(_orderId);
         sellerOrders[_seller].push(_orderId);
 
-        emit OrderConfirmed(_orderId, _seller, payable(msg.sender), _amount, block.number, OrderState.Filled);
+        emit OrderConfirmed(_orderId, _seller, payable(msg.sender),  _amount,  block.timestamp,  OrderState.Filled);
     }
 
     /// Confirm that the smart contract's owner received the item.
@@ -163,7 +178,7 @@ contract OrderManager {
 
         // overwrite it
         orders[id] = currentOrder;
-        emit ItemReceived(id);
+        emit ItemReceived(id, orders[id].sellerAddress, payable(msg.sender),  orders[id].amount,  block.timestamp,  OrderState.Closed);
     }
 
     /// Refound owner if he decided to cancel the order before
@@ -183,7 +198,7 @@ contract OrderManager {
         
         // overwrite
         orders[id] = currentOrder;
-        emit OwnerRefunded(id);
+        emit OwnerRefunded(id, orders[id].sellerAddress, orders[id].ownerAddress,  orders[id].amount,  block.timestamp,  OrderState.Cancelled);
     }
 
     /**************************************
