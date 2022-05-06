@@ -13,7 +13,13 @@ contract MoneyBoxManager is OrderManager {
         uint256 timestamp;
     }
 
+    struct PaymentTuple {
+        string moneyboxId;
+        Payment payment;
+    }
+
     mapping (string => Payment[]) private payments;
+    mapping (address => PaymentTuple[]) private customerPayments;
 
     /**************************************
      *             MODIFIERS
@@ -77,9 +83,12 @@ contract MoneyBoxManager is OrderManager {
             "Insufficient coin value"
         );
 
-        payments[moneyBoxId].push(
-            Payment(payable(msg.sender), _amount, block.timestamp)
-        );
+        Payment memory _payment = Payment(payable(msg.sender), _amount, block.timestamp);
+
+        payments[moneyBoxId].push(_payment);
+
+        // link payment to search map
+        customerPayments[msg.sender].push(PaymentTuple(moneyBoxId, _payment));
 
         if(this.getAmountToFill(moneyBoxId) <= 0)
             orders[moneyBoxId].state = OrderState.Filled;
@@ -97,6 +106,7 @@ contract MoneyBoxManager is OrderManager {
         for (uint i = 0; i < ps.length; i++) {
             ps[i].from.transfer(ps[i].amount);
         }
+
         orders[id].state = OrderState.Cancelled;
         emit OwnerRefunded(id, orders[id].sellerAddress, orders[id].ownerAddress, orders[id].amount, block.timestamp, OrderState.Cancelled);
     }
@@ -169,5 +179,20 @@ contract MoneyBoxManager is OrderManager {
         return ConcatenateArrays(super_orders, this_orders);
     }
 
+
+    function getAllPaymentsByCustomerAddress(address customerAddress)
+        external
+        view
+        returns(PaymentTuple[] memory)
+    {
+        /*
+        PaymentTuple[] memory _customerPayments = new PaymentTuple[](customerPayments[customerAddress].length);
+
+        for(uint i = 0; i < customerPayments[customerAddress].length; i++){
+            _customerPayments[i] = PaymentTuple(customerPayments[customerAddress])
+        }
+        */
+        return customerPayments[customerAddress];
+    }
 
 }
