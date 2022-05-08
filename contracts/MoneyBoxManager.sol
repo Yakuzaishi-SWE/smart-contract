@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 // define which compiler to use
-// VERSION = 1.0.0
+// VERSION = 1.2.2
 import "./OrderManager.sol";
 
-pragma solidity >=0.7.0 <=0.8.13;   // version with major support and testing
+pragma solidity >=0.7.0 <=0.8.13;   // versions with major support and testing
 
 contract MoneyBoxManager is OrderManager {
 
@@ -13,13 +13,15 @@ contract MoneyBoxManager is OrderManager {
         uint256 timestamp;
     }
 
+    /*
     struct PaymentTuple {
-        string moneyboxId;
-        Payment payment;
+        string id;
+        Order moneybox;
     }
+    */
 
     mapping (string => Payment[]) private payments;
-    mapping (address => PaymentTuple[]) private customerPayments;
+    mapping (address => string[]) private participantMoneyBoxes;
 
     /**************************************
      *             MODIFIERS
@@ -88,7 +90,7 @@ contract MoneyBoxManager is OrderManager {
         payments[moneyBoxId].push(_payment);
 
         // link payment to search map
-        customerPayments[msg.sender].push(PaymentTuple(moneyBoxId, _payment));
+        participantMoneyBoxes[msg.sender].push(moneyBoxId);
 
         if(this.getAmountToFill(moneyBoxId) <= 0)
             orders[moneyBoxId].state = OrderState.Filled;
@@ -110,9 +112,6 @@ contract MoneyBoxManager is OrderManager {
         orders[id].state = OrderState.Cancelled;
         emit OwnerRefunded(id, orders[id].sellerAddress, orders[id].ownerAddress, orders[id].amount, block.timestamp, OrderState.Cancelled);
     }
-
-    // facciamo il rimborso per il singolo utente partecipante??? Da aggiungere in analisi dei requisiti
-
 
     /**************************************
      *             GETTERS
@@ -141,6 +140,12 @@ contract MoneyBoxManager is OrderManager {
         return total-paid;
     }
 
+    /*
+    function compareStrings(string memory a, string memory b) public pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
+    }
+    */
+
     function ConcatenateArrays(OrderTuple[] memory primo, OrderTuple[] memory secondo) private pure returns(OrderTuple[] memory) {
         OrderTuple[] memory returnArr = new OrderTuple[](primo.length + secondo.length);
 
@@ -155,7 +160,7 @@ contract MoneyBoxManager is OrderManager {
         }
 
         return returnArr;
-    } 
+    }
 
     function getAllBuyerOrders(OrderManager superContract, address _buyerAddress)
         external
@@ -180,19 +185,17 @@ contract MoneyBoxManager is OrderManager {
     }
 
 
-    function getAllPaymentsByCustomerAddress(address customerAddress)
+    function getMoneyBoxesByParticipantAddress(address participantAddress)
         external
         view
-        returns(PaymentTuple[] memory)
+        returns(OrderTuple[] memory)
     {
-        /*
-        PaymentTuple[] memory _customerPayments = new PaymentTuple[](customerPayments[customerAddress].length);
+        OrderTuple[] memory pays = new OrderTuple[](participantMoneyBoxes[participantAddress].length);
 
-        for(uint i = 0; i < customerPayments[customerAddress].length; i++){
-            _customerPayments[i] = PaymentTuple(customerPayments[customerAddress])
+        for(uint i = 0; i < participantMoneyBoxes[participantAddress].length; i++){
+            pays[i] = OrderTuple(participantMoneyBoxes[participantAddress][i], orders[participantMoneyBoxes[participantAddress][i]]);
         }
-        */
-        return customerPayments[customerAddress];
-    }
 
+        return pays;
+    }
 }

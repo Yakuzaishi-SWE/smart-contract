@@ -184,23 +184,28 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
             assert.equal(order2.ownerAddress, buyer2, "Owner address matches with the buyer address")
         })
 
-        it("check getAllPaymentsByCustomerAddress(address)", async () => {
+        it("check getMoneyBoxesByParticipantAddress(address)", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer })
             await contract.newPayment(id1, ether_quarter, { from: buyer2, value: ether_quarter })
             await contract.newPayment(id1, ether_quarter, { from: buyer2, value: ether_quarter })
             await contract.newPayment(id1, ether_quarter, { from: buyer, value: ether_quarter })
 
-            const buyer2Payments = await contract.getAllPaymentsByCustomerAddress(buyer2)
+            const participantMoneyBoxes1 = await contract.getMoneyBoxesByParticipantAddress(buyer)
+            const participantMoneyBoxes2 = await contract.getMoneyBoxesByParticipantAddress(buyer2)
 
-            assert.equal(buyer2Payments.length, 2, 'The payments array has the correct length')
-            assert.equal(buyer2Payments[0].moneyboxId, id1, "The moneyboxid is correct")
-            
-            const payment1 = buyer2Payments[0].payment;
-            assert.equal(payment1.from, buyer2, "The customer address is correct")
-            assert.equal(payment1.amount, ether_quarter, "The payment amount is correct")
-            const payment2 = buyer2Payments[1].payment;
-            assert.equal(payment1.from, buyer2, "The customer address is correct")
-            assert.equal(payment1.amount, ether_quarter, "The payment amount is correct")
+            assert.equal(participantMoneyBoxes1.length, 1, 'The number of moneybox participation filtered by buyer is correct')
+            assert.equal(participantMoneyBoxes2.length, 2, 'The number of moneybox participation filtered by buyer2 is correct')
+
+            const moneybox1 = participantMoneyBoxes1[0];
+            const moneybox2 = participantMoneyBoxes2[0];
+
+            assert.equal(moneybox1.id, id1, "The moneybox id is correct")
+            assert.equal(moneybox1.order['sellerAddress'], seller, "The seller address is correct")
+            assert.equal(moneybox1.order["amount"], ether_1, "The moneybox amount is correct")
+        
+            assert.equal(moneybox2.id, id1, "The moneybox id is correct")
+            assert.equal(moneybox2.order['sellerAddress'], seller, "The seller address is correct")
+            assert.equal(moneybox2.order["amount"], ether_1, "The moneybox amount is correct")
         })
     })
 });
