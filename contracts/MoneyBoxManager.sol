@@ -44,7 +44,6 @@ contract MoneyBoxManager is OrderManager {
         uint fee_amount,
         address owner,
         uint256 timestamp
-
     );
 
     /**************************************
@@ -54,7 +53,7 @@ contract MoneyBoxManager is OrderManager {
     // this function is the equivalent of newMoneyBox() but it overrides the newOrder function
     function newOrder(address payable _seller, uint _amount, string memory _orderId)
         override
-        external
+        public
         payable
         notItself(_seller, msg.sender)
         isUniqueId(_orderId)
@@ -76,31 +75,31 @@ contract MoneyBoxManager is OrderManager {
 
     // this function miss the control of valid moneybox id
     function newPayment(string memory moneyBoxId, uint _amount) 
-        external
+        public
         payable
-        enoughFunds(msg.sender, _amount)
+        enoughFunds(tx.origin, _amount)
     {
         require(
             msg.value >= _amount,
             "Insufficient coin value"
         );
 
-        Payment memory _payment = Payment(payable(msg.sender), _amount, block.timestamp);
+        Payment memory _payment = Payment(payable(tx.origin), _amount, block.timestamp);
 
         payments[moneyBoxId].push(_payment);
 
         // link payment to search map
-        participantMoneyBoxes[msg.sender].push(moneyBoxId);
+        participantMoneyBoxes[tx.origin].push(moneyBoxId);
 
         if(this.getAmountToFill(moneyBoxId) <= 0)
             orders[moneyBoxId].state = OrderState.Filled;
 
-        emit NewPaymentCreated(moneyBoxId, _amount, msg.sender, block.timestamp);
+        emit NewPaymentCreated(moneyBoxId, _amount, tx.origin, block.timestamp);
     }
 
     function refund(string memory id)
         override
-        external
+        public
         isOwnerOrSeller(id)
         moneyBoxNotClosedOrCancelled(id)
     {
@@ -118,7 +117,7 @@ contract MoneyBoxManager is OrderManager {
      *************************************/
 
     function getMoneyBoxPayments(string memory id)
-        external
+        public
         view
         returns(Payment[] memory)
     {
@@ -126,7 +125,7 @@ contract MoneyBoxManager is OrderManager {
     }
 
     function getAmountToFill(string memory id)
-        external
+        public
         view
         returns(uint)
     {
@@ -146,7 +145,7 @@ contract MoneyBoxManager is OrderManager {
     }
     */
 
-    function ConcatenateArrays(OrderTuple[] memory primo, OrderTuple[] memory secondo) private pure returns(OrderTuple[] memory) {
+    function ConcatenateArrays(OrderTuple[] memory primo, OrderTuple[] memory secondo) internal pure returns(OrderTuple[] memory) {
         OrderTuple[] memory returnArr = new OrderTuple[](primo.length + secondo.length);
 
         uint i=0;
@@ -163,30 +162,30 @@ contract MoneyBoxManager is OrderManager {
     }
 
     function getAllBuyerOrders(OrderManager superContract, address _buyerAddress)
-        external
+        public
         view
         returns(OrderTuple[] memory)
     {
         OrderTuple[] memory super_orders = superContract.getOrdersByBuyer(_buyerAddress);
         OrderTuple[] memory this_orders = this.getOrdersByBuyer(_buyerAddress);
-
+        
         return ConcatenateArrays(super_orders, this_orders);
     }
 
     function getAllSellerOrders(OrderManager superContract, address _sellerAddress)
-        external
+        public
         view
         returns(OrderTuple[] memory)
     {
         OrderTuple[] memory super_orders = superContract.getOrdersBySeller(_sellerAddress);
         OrderTuple[] memory this_orders = this.getOrdersBySeller(_sellerAddress);
-
+        
         return ConcatenateArrays(super_orders, this_orders);
     }
 
 
     function getMoneyBoxesByParticipantAddress(address participantAddress)
-        external
+        public
         view
         returns(OrderTuple[] memory)
     {
