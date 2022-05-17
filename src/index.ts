@@ -1,6 +1,6 @@
 import { Contract } from "web3-eth-contract";
 import { AbiItem } from "web3-utils";
-import SP from '../build/contracts/ShopChain.json';
+import SP from '../build/contracts/OrderManager.json';
 
 export const loadAbis = (): AbiItem[] => { return SP as unknown as AbiItem[]; }
 
