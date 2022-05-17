@@ -65,7 +65,8 @@ contract('MoneyBox SmartContract', ([deployer, buyer, seller, buyer2]) => {
             const payments = await contract.getMoneyBoxPayments(id1)
 
             assert.equal(payments.length, 1, "The moneybox doesn't have the right number of payments")
-            assert.equal(payments[0].amount, ether_half, "The value isn't correct")            
+            assert.equal(payments[0].amount, ether_half, "The value isn\'t correct")   
+            assert.equal(payments[0].from, buyer, "The participant address isn\'t correct")
         })
 
         it("new fee transfer into moneybox", async () => {
