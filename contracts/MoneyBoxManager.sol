@@ -168,7 +168,7 @@ contract MoneyBoxManager is OrderManager {
     {
         OrderTuple[] memory super_orders = superContract.getOrdersByBuyer(_buyerAddress);
         OrderTuple[] memory this_orders = this.getOrdersByBuyer(_buyerAddress);
-
+        
         return ConcatenateArrays(super_orders, this_orders);
     }
 
@@ -179,7 +179,7 @@ contract MoneyBoxManager is OrderManager {
     {
         OrderTuple[] memory super_orders = superContract.getOrdersBySeller(_sellerAddress);
         OrderTuple[] memory this_orders = this.getOrdersBySeller(_sellerAddress);
-
+        
         return ConcatenateArrays(super_orders, this_orders);
     }
 

@@ -231,6 +231,7 @@ contract OrderManager {
     }
 
     function getOrdersByBuyer(address _buyerAddress) public view returns(OrderTuple[] memory) {
+
         OrderTuple[] memory _buyerOrders = new OrderTuple[](buyerOrders[_buyerAddress].length);
 
         for(uint i = 0; i < buyerOrders[_buyerAddress].length; i++){
