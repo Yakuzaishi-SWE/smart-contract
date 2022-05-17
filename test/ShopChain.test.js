@@ -1,13 +1,11 @@
 const { assert } = require('chai')
 const { BigNumber } = require('bignumber.js');
-const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 require('chai')
     .use(require('chai-as-promised'))
     .should()
 
-const OrderManager = artifacts.require('./OrderManager.sol')
-const MoneyBoxManager = artifacts.require('./MoneyBoxManager.sol')
+const ShopChain = artifacts.require('./ShopChain.sol')
 
 const OrderState = {
     NOT_CREATED: 0,
@@ -29,18 +27,18 @@ async function getGas(_response) {
     return gasUsed;
 }
 
-contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
-    let contract, mb_contract;
+contract('ShopChain SmartContract', ([deployer, buyer, seller]) => {
+    let contract;
 
     beforeEach(async () => {
-        contract = await OrderManager.new();
+        contract = await ShopChain.new();
     });
 
     it("should have the initial order number to 0", async () => {
         const count = await contract.getOrderCount();
 
         assert.equal(count, 0)
-    });
+    })
 
     describe("single payment order", () => {
 
@@ -50,11 +48,11 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
 
             const order = await contract.getOrderById(id1);
 
-            assert.equal(order.ownerAddress, buyer, 'owner address isn\'t correct')
-            assert.equal(order.sellerAddress, seller, "seller address isn\'t correct")
-            assert.equal(order.amount, ether_1, 'amount isn\'t correct')
+            assert.equal(order.ownerAddress, buyer, 'owner address is correct')
+            assert.equal(order.sellerAddress, seller, "seller address is correct")
+            assert.equal(order.amount, ether_1, 'amount is correct')
             assert.notEqual(order.unlockCode, 0)
-            assert.equal(order.state, OrderState.FILLED, 'order isn\'t in filled state')
+            assert.equal(order.state, OrderState.FILLED, 'order is filled')
         })
 
         it("the contract is filled with the correct amount", async () => {
@@ -128,26 +126,25 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
         })
 
         describe("failure cases", async () => {
-
-            beforeEach(async () => {
+            it("order id isn't correct", async () => {
                 await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 });
-            });
-
-            it("order id isn't correct", async () => {    
                 const unlockCode = await contract.getUnlockCode(id1);
                 await contract.confirmReceived(id2, unlockCode, { from: buyer }).should.be.rejected
             });
 
             it("order unlock code doesn't match with unlock code saved", async () => {
+                await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 });
                 await contract.confirmReceived(id1, 12345, { from: buyer }).should.be.rejected
             })
 
             it("order is unlock from an address different from buyer address", async () => {
+                await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 });
                 const unlockCode = await contract.getUnlockCode(id1);
+
                 await contract.confirmReceived(id1, unlockCode, { from: seller }).should.be.rejected
             })
         });
-    });
+    })
 
     describe("order refund", async () => {
 
@@ -202,20 +199,17 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
 
 
         describe("failure cases", () => {
+            it("should not refund an order not filled", async () => {
+
+            })
 
             it("should not refund an order already closed", async () => {
-                await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 })
-                unlockCode = await contract.getUnlockCode(id1);
-                await contract.confirmReceived(id1, unlockCode, { from: buyer });
 
-                await contract.refund(id1, { from: buyer }).should.be.rejected;
             })
 
             it("should be the owner or the seller", async () => {
-                await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 })
-                await contract.refund(id1, { from: buyer2 }).should.be.rejected;              
-            })
 
+            })
         })
     });
 
@@ -238,12 +232,18 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
             const result = await contract.getSellerAddress(id1)
             assert.equal(seller, result, "Seller address is correct")
         })
-
         it("check getAmountToPay(string)", async () => {
             await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 })
             const realAmount = ether_1;
             const result = await contract.getAmountToPay(id1)
-            assert.equal(realAmount.toString(), result.toString(), "Amount to pay is correct")
+            assert.equal(realAmount, result, "Amount to pay is correct")
+        })
+
+        it('check getAmountPaid(string)', async () => {
+            await contract.newOrder(seller, ether_1, id1, { from: buyer, value: ether_1 })
+            const realAmount = ether_1;
+            const result = await contract.getAmountPaid(id1)
+            assert.equal(realAmount, result, "Amount to pay is correct")
         })
 
         it("check getOrderState(string)", async function () {
@@ -294,5 +294,5 @@ contract('OrderManager SmartContract', ([deployer, buyer, seller, buyer2]) => {
             assert.equal(order1.ownerAddress, buyer, "Owner address matches with the buyer address")
             assert.equal(order1.state, OrderState.FILLED, "The order state matches with the FILLED state")
         })
-    });
+    })
 });

@@ -1,7 +1,5 @@
-const OrderManager = artifacts.require("OrderManager");
-const MoneyBoxManager = artifacts.require("MoneyBoxManager");
+const ShopChain = artifacts.require("ShopChain");
 
 module.exports = function(deployer) {
-  deployer.deploy(OrderManager);
-  deployer.deploy(MoneyBoxManager);
+  deployer.deploy(ShopChain);
 };
