@@ -3,7 +3,8 @@
 // VERSION = 1.2.2
 import "./OrderManager.sol";
 
-pragma solidity >=0.7.0 <=0.8.13;   // versions with major support and testing
+pragma solidity ^0.8.0;  // versions with major support and testing
+pragma abicoder v2;
 
 contract MoneyBoxManager is OrderManager {
 
@@ -51,7 +52,7 @@ contract MoneyBoxManager is OrderManager {
      *************************************/
 
     // this function is the equivalent of newMoneyBox() but it overrides the newOrder function
-    function newOrder(address payable _seller, uint _amount, string memory _orderId)
+    function newOrder(address payable _seller, uint _amountIn, uint _amountOut, string memory _orderId)
         override
         public
         payable
@@ -59,7 +60,7 @@ contract MoneyBoxManager is OrderManager {
         isUniqueId(_orderId)
     {
         OrderManager.orderCount++;
-        OrderManager.orders[_orderId] = Order(_seller, payable(msg.sender), _amount, block.number, block.timestamp, OrderState.Created);
+        OrderManager.orders[_orderId] = Order(_seller, payable(msg.sender), _amountIn, block.number, block.timestamp, OrderState.Created);
         
         // link order to search mappings
         OrderManager.buyerOrders[msg.sender].push(_orderId);
@@ -69,7 +70,7 @@ contract MoneyBoxManager is OrderManager {
             this.newPayment{ value: msg.value }(_orderId, msg.value);
         }
 
-        emit OrderCreated(_orderId, _seller, payable(msg.sender), _amount, block.timestamp, OrderState.Created);
+        emit OrderCreated(_orderId, _seller, payable(msg.sender), _amountIn, block.timestamp, OrderState.Created);
 
     }
 
