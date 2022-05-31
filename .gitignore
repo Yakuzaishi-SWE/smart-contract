@@ -112,3 +112,5 @@ abis
 coverage.json
 
 .DS_Store
+
+.env
