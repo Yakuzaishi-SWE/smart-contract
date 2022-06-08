@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-tracer");
 require('dotenv').config();
+require("solidity-coverage");
 
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -15,6 +16,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: "0.8.0",
+  defaultNetwork: "ftmtestnet",
   networks: {
     ftmtestnet: {
       url: `https://rpc.testnet.fantom.network/`,

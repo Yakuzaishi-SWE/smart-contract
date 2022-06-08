@@ -2,7 +2,7 @@
 // define which compiler to use
 // VERSION = 2.1.1
 pragma solidity ^0.8.0;  // versions with major support and testing
-//pragma abicoder v2;
+pragma abicoder v2;
 
 import "@hovoh/spookyswap-core/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -18,7 +18,7 @@ contract OrderManager {
     address public STABLECOIN = 0xA70A572aa5489a5CDd0dAA3bF0Cf440A92f50402; 
 
     // my liquidity pool
-    // here there is my pair0x269Dbe218d78297a00fda4e6628B71dF61006655 WFTM/USDT
+    // here there is my pair WFTM/USDT
     // address public LP = 0x269Dbe218d78297a00fda4e6628B71dF61006655;
 
     // deployed contract to do tests
@@ -177,7 +177,7 @@ contract OrderManager {
     /// The ether will be locked until confirmReceived
     /// is called.
     // amountIn == FTM | amountOut == USDT
-    function newOrder(address payable _seller, uint _amountIn, uint _amountOut, string memory _orderId)
+    function newOrder(address payable _seller, uint _amountIn, uint[] memory _amountOut, string memory _orderId)
         virtual
         public
         payable
@@ -192,7 +192,7 @@ contract OrderManager {
             "Insufficient coin value"
         );
         orderCount++;
-        orders[_orderId] = Order(_seller, payable(msg.sender), _amountOut, block.number, block.timestamp, OrderState.Filled);
+        orders[_orderId] = Order(_seller, payable(msg.sender), _amountOut[0], block.number, block.timestamp, OrderState.Filled);
         
         // link order to search mappings
         buyerOrders[msg.sender].push(_orderId);
@@ -203,13 +203,13 @@ contract OrderManager {
         path[0] = WFTM;
         path[1] = STABLECOIN;
 
-        uint256[] memory feedbackAmounts = uniswapV2Router.swapETHForExactTokens{value: msg.value}(_amountOut, path, address(this), block.timestamp);
+        uint256[] memory feedbackAmounts = uniswapV2Router.swapETHForExactTokens{value: msg.value}(_amountOut[0], path, address(this), block.timestamp);
 
         if(feedbackAmounts[0] < msg.value){
             payable(msg.sender).transfer(msg.value - feedbackAmounts[0]);
         }
 
-        emit OrderConfirmed(_orderId, _seller, payable(msg.sender),  _amountOut,  block.timestamp,  OrderState.Filled);
+        emit OrderConfirmed(_orderId, _seller, payable(msg.sender), _amountOut[0], block.timestamp, OrderState.Filled);
     }
 
     /// Confirm that the smart contract's owner received the item.
