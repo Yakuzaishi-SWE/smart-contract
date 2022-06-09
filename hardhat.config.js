@@ -31,18 +31,11 @@ module.exports = {
       url: `https://rpc.testnet.fantom.network/`,
       accounts: [`${process.env.owner_PRIVATE_KEY}`, `${process.env.buyer1_PRIVATE_KEY}`, `${process.env.buyer2_PRIVATE_KEY}`, `${process.env.seller1_PRIVATE_KEY}`],
     },
-    /*ftmfork: {
-      allowUnlimitedContractSize: true,
-      forking: {
-        url: "https://speedy-nodes-nyc.moralis.io/9e6e79f489193b1865d7185f/fantom/mainnet",
-        blockNumber: 40140320,
-      },
-    },*/
     hardhat: {
       allowUnlimitedContractSize: true,
       forking: {
-        url: "https://api.avax.network/ext/bc/C/rpc",
-        blockNumber: 14341516,
+        //url: "https://speedy-nodes-nyc.moralis.io/9e6e79f489193b1865d7185f/fantom/mainnet",
+        url: "https://rpc.testnet.fantom.network/",
       },
     },
   }

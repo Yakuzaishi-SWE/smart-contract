@@ -83,7 +83,7 @@ contract MoneyBoxManager is OrderManager {
         enoughFunds(tx.origin, _amountIn)
     {
         require(
-            msg.value >= 0,
+            msg.value > 0,
             "Insufficient coin value"
         );
 

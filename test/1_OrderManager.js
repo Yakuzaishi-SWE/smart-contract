@@ -148,23 +148,10 @@ describe("OrderManager contract", function () {
         });
 
         describe("failure cases", () => {
-            /*  NECESSARIO???
-            it("user tries to insert an amount less than the required amount", async () => {
-                await contract.newOrder(seller, ether_1, id2, { from: buyer, value: ether_half }).should.be.rejected
-                await newOrderFTMtoUSDT(FTMtoUSDT(ether_small), buyer1, seller1, id1).should.be.rejected;
-            })
-            */
-
+            
             it("user tries to order his item, or send funds to itself", async () => {
                 expect(newOrderFTMtoUSDT(FTMtoUSDT(ether_small), seller1, seller1, id1)).to.be.reverted;
             });
-            
-            /*  FORSE NON NECESSARIO, potrebbe avere degli ordini a 0 (pensa agli sconti)
-            it("user tries to pass value equal to zero", async () => {
-                //await contract.newOrder(seller, 0, id2, { from: seller, value: ether_1 }).should.be.rejected
-                expect(newOrderFTMtoUSDT(FTMtoUSDT(0), buyer1, seller1, id1)).to.be.reverted; 
-            });
-            */
 
             it("user tries to send negative coin value", async () => {
                 //await contract.newOrder(seller, -1, id2, { from: buyer, value: ether_1 }).should.be.rejected
@@ -172,8 +159,7 @@ describe("OrderManager contract", function () {
             });
 
             it("user hasn't enough founds", async () => {
-                //await contract.newOrder(seller, ether_big, id2, { from: buyer, value: ether_big }).should.be.rejected
-                expect(newOrderFTMtoUSDT(FTMtoUSDT(ether_big), buyer1, seller1, id1)).to.be.reverted;
+                expect(contract.connect(buyer1).newOrder(seller1.address, ether_big, [ether_big], id1, { value: ether_big })).to.be.reverted;
             });
 
             it("front end require the creation of an order with the same order id", async () => {
@@ -199,6 +185,7 @@ describe("OrderManager contract", function () {
                 const unlockCode = await contract.getUnlockCode(id1);
                 let tx = await contract.connect(buyer1).confirmReceived(id1, unlockCode);
                 await tx.wait();
+                
 
                 // get order
                 const order = await contract.getOrderById(id1);
@@ -214,6 +201,7 @@ describe("OrderManager contract", function () {
 
                 assert.equal(expected_new_seller1_balance.toString(), seller1_USDT_new_balance.toString(), "Seller balance isn\'t correct")
                 assert.equal(expected_new_contract_balance.toString(), contract_USDT_new_balance.toString(), "Contract balance isn\'t correct")
+                
             });
 
             describe("failure cases", () => {

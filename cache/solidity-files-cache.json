@@ -2,14 +2,14 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/workspaces/smart-contract/contracts/MoneyBoxManager.sol": {
-      "lastModificationDate": 1654725431969,
-      "contentHash": "f8df9edbdaac823ec2be6a53f11a5f2c",
+      "lastModificationDate": 1654806686048,
+      "contentHash": "4fd22d622406ea8425e3bd92c842d8e1",
       "sourceName": "contracts/MoneyBoxManager.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
           },
           "outputSelection": {
@@ -25,6 +25,9 @@
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -39,14 +42,14 @@
       ]
     },
     "/workspaces/smart-contract/contracts/OrderManager.sol": {
-      "lastModificationDate": 1654724728436,
+      "lastModificationDate": 1654794426461,
       "contentHash": "ce1955b1eec59b7e3739c0ef13946462",
       "sourceName": "contracts/OrderManager.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
           },
           "outputSelection": {
@@ -62,6 +65,9 @@
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -84,7 +90,7 @@
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
           },
           "outputSelection": {
@@ -100,6 +106,9 @@
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -121,7 +130,7 @@
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
           },
           "outputSelection": {
@@ -137,6 +146,9 @@
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -156,7 +168,7 @@
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
           },
           "outputSelection": {
@@ -172,6 +184,9 @@
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },

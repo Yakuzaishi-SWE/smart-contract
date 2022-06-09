@@ -93,7 +93,7 @@ async function SingleOrderFTMtoUSDT(amountOut, buyer, seller, id) {
     //console.log("FTM: ", msg_value, " USDT: ", amountOut);
     let tx = await order_manager
         .connect(buyer)
-        .newOrder(seller.address, msg_value, amountOut, id, { value: msg_value });
+        .newOrder(seller.address, msg_value, [amountOut], id, { value: msg_value });
     return [tx, msg_value];
 }
 
@@ -182,6 +182,13 @@ describe("MoneyBox contract", function () {
             assert.equal(payments.length, 1, "The payments number isn't correct");
             assert.equal(payments[0].amount.toString(), FTMtoUSDT(ether_half).toString(), "The payment hasn't the right amount");
             assert.equal(payments[0].from, buyer2.address, "The payment hasn't the right from address");
+        });
+
+        it("failure newPayment", async () => {
+            let response = await newOrderFTMtoUSDT(FTMtoUSDT(ether_1), buyer1, seller1, id1);
+            await response[0].wait();
+
+            expect(newPaymentFTMtoUSDT(id1, ether_half, 0, buyer2)).to.be.reverted;
         });
     });
     describe("moneybox refund", () => {
@@ -285,17 +292,18 @@ describe("MoneyBox contract", function () {
             it("check getAllBuyerOrders(supercontract, _buyerAddress)", async () => {
                 let response = await newOrderFTMtoUSDT(FTMtoUSDT(ether_1), buyer1, seller1, id1);
                 await response[0].wait();
-                /*
+                
                 let tx = await SingleOrderFTMtoUSDT(FTMtoUSDT(ether_small), buyer1, seller1, id2);
                 await tx[0].wait();
-                */
+                
                 // this method gets the super_contract orders concatenated to moneybox_contract!!!
                 const buyer_orders = await contract.getAllBuyerOrders(order_manager.address, buyer1.address);
                 //console.log(buyer_orders);
-                assert.equal(buyer_orders.length, 1, "the orders number isn't correct");
+                assert.equal(buyer_orders.length, 2, "the orders number isn't correct");
 
                 const order1 = buyer_orders[0].order;
-                assert.equal(buyer_orders[0].id, id1, "The order id isn't correct");
+                assert.equal(buyer_orders[0].id, id2, "The order id isn't correct");
+                assert.equal(buyer_orders[1].id, id1, "The order id isn't correct");
                 assert.equal(order1.sellerAddress, seller1.address, "The seller address isn't correct");
                 assert.equal(order1.ownerAddress, buyer1.address, "Owner address matches with the buyer address");
                 /*
@@ -339,23 +347,10 @@ describe("MoneyBox contract", function () {
             
             const participantMoneyBoxes1 = await contract.getMoneyBoxesByParticipantAddress(buyer1.address);
             const participantMoneyBoxes2 = await contract.getMoneyBoxesByParticipantAddress(buyer2.address);
-            console.log(participantMoneyBoxes1);
-            console.log(participantMoneyBoxes2);
+            //console.log(participantMoneyBoxes1);
+            //console.log(participantMoneyBoxes2);
             assert.equal(participantMoneyBoxes1.length, 0, 'The number of moneybox participation filtered by buyer1 isn\'t correct');
             assert.equal(participantMoneyBoxes2.length, 1, 'The number of moneybox participation filtered by buyer2 isn\'t correct');
-            /*
-
-            const moneybox1 = participantMoneyBoxes1[0];
-            const moneybox2 = participantMoneyBoxes2[0];
-
-            assert.equal(moneybox1.id, id1, "The moneybox id isn't correct");
-            assert.equal(moneybox1.order['sellerAddress'], seller1.address, "The seller address isn't correct");
-            assert.equal(moneybox1.order["amount"].toString(), FTMtoUSDT(ether_1), "The moneybox amount isn't correct");
-        
-            assert.equal(moneybox2.id, id2, "The moneybox id isn't correct");
-            assert.equal(moneybox2.order['sellerAddress'], seller1.address, "The seller address isn't correct");
-            assert.equal(moneybox2.order["amount"], FTMtoUSDT(ether_1), "The moneybox amount isn't correct");
-            */
         });
     });
 });
