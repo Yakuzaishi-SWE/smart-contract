@@ -69,7 +69,7 @@ async function newOrderFTMtoUSDT(amountOut, buyer, seller, id) {
     //console.log("FTM: ", msg_value, " USDT: ", amountOut);
     let tx = await contract
         .connect(buyer)
-        .newOrder(seller.address, msg_value, amountOut, id, { value: msg_value });
+        .newOrder(seller.address, msg_value, [amountOut], id, { value: msg_value });
     return [tx, msg_value];
 }
 

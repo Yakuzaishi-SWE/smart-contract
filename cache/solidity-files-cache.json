@@ -1,15 +1,15 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/workspaces/smart-contract/contracts/OrderManager.sol": {
-      "lastModificationDate": 1654724728436,
-      "contentHash": "ce1955b1eec59b7e3739c0ef13946462",
-      "sourceName": "contracts/OrderManager.sol",
+    "/workspaces/smart-contract/contracts/MoneyBoxManager.sol": {
+      "lastModificationDate": 1654725431969,
+      "contentHash": "f8df9edbdaac823ec2be6a53f11a5f2c",
+      "sourceName": "contracts/MoneyBoxManager.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": false,
+            "enabled": true,
             "runs": 200
           },
           "outputSelection": {
@@ -25,9 +25,43 @@
                 "ast"
               ]
             }
+          }
+        }
+      },
+      "imports": [
+        "./OrderManager.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "MoneyBoxManager"
+      ]
+    },
+    "/workspaces/smart-contract/contracts/OrderManager.sol": {
+      "lastModificationDate": 1654724728436,
+      "contentHash": "ce1955b1eec59b7e3739c0ef13946462",
+      "sourceName": "contracts/OrderManager.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
           },
-          "metadata": {
-            "useLiteralContent": false
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
           }
         }
       },
@@ -50,7 +84,7 @@
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": false,
+            "enabled": true,
             "runs": 200
           },
           "outputSelection": {
@@ -66,9 +100,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -90,7 +121,7 @@
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": false,
+            "enabled": true,
             "runs": 200
           },
           "outputSelection": {
@@ -106,9 +137,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -128,7 +156,7 @@
         "version": "0.8.0",
         "settings": {
           "optimizer": {
-            "enabled": false,
+            "enabled": true,
             "runs": 200
           },
           "outputSelection": {
@@ -144,9 +172,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
