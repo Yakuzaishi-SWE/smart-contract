@@ -113,4 +113,6 @@ coverage.json
 
 .DS_Store
 
-.env
+coverage
+artifacts
+cache
