@@ -86,7 +86,7 @@ contract MoneyBoxManager is OrderManager {
             msg.value > 0,
             "Insufficient coin value"
         );
-
+        
         Payment memory _payment = Payment(payable(tx.origin), _amountOut, block.timestamp);
 
         payments[moneyBoxId].push(_payment);
@@ -154,7 +154,10 @@ contract MoneyBoxManager is OrderManager {
             paid += ps[i].amount;
         }
 
-        return total-paid;
+        if(total < paid)
+            return 0;
+        else
+            return total - paid;
     }
 
     /*

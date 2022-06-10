@@ -271,7 +271,8 @@ contract OrderManager {
     }
 
     function contractBalance() public view returns(uint) {
-        return address(this).balance;
+        //return address(this).balance;
+        return IERC20(STABLECOIN).balanceOf(address(this));
     }
 
     function getOwnerAddress(string memory id) public view returns(address) {

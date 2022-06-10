@@ -191,6 +191,35 @@ describe("MoneyBox contract", function () {
             expect(newPaymentFTMtoUSDT(id1, ether_half, 0, buyer2)).to.be.reverted;
         });
     });
+
+    describe("advance moneybox payments tests", () => {
+        it("fill moneybox with multiple payments", async () => {
+            const amount = etherToWei('1');
+            const initAmount = etherToWei('0.7');
+
+            const values = await IUniswapV2Router02.getAmountsOut(amount, path);
+            const usdt_to_pay = values[1];
+            const partial_values = await IUniswapV2Router02.getAmountsOut(initAmount, path);
+            
+            const amountOut = [usdt_to_pay, partial_values[1]];
+
+            let result = await contract.connect(buyer1).newOrder(seller1.address, amount, amountOut, id1, {value: initAmount});
+            result.wait();
+
+            const amount2 = etherToWei('0.3002');
+            const values2 = await IUniswapV2Router02.getAmountsOut(amount2, path);
+            const usdt_to_pay2 = values2[1];
+            
+            result = await contract.connect(buyer1).newPayment(id1, amount2, usdt_to_pay2, { value: amount2 });
+            result.wait();
+
+            const finale = await contract.getOrderState(id1);
+            const check = await contract.getAmountToFill(id1);
+            assert(finale, 2, "The order isn't in the right state");
+            assert(check.toString(), 0, "The amount to fill isn't 0");
+        });
+    });
+
     describe("moneybox refund", () => {
 
         it("refund all fee transfers from moneybox owner", async () => {
@@ -306,12 +335,6 @@ describe("MoneyBox contract", function () {
                 assert.equal(buyer_orders[1].id, id1, "The order id isn't correct");
                 assert.equal(order1.sellerAddress, seller1.address, "The seller address isn't correct");
                 assert.equal(order1.ownerAddress, buyer1.address, "Owner address matches with the buyer address");
-                /*
-                const order2 = buyer_orders[1].order;
-                assert.equal(buyer_orders[1].id, id1, "The order id isn't correct");
-                assert.equal(order2.sellerAddress, seller1.address, "The seller address isn't correct");
-                assert.equal(order2.ownerAddress, buyer1.address, "Owner address matches with the buyer address");
-                */
             });
 
             it("check getAllSellerOrders(OrderManager, address)", async () => {

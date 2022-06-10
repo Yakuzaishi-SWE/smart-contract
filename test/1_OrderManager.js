@@ -316,10 +316,10 @@ describe("OrderManager contract", function () {
                 let response = await newOrderFTMtoUSDT(FTMtoUSDT(ether_small), buyer1, seller1, id1);
                 await response[0].wait();
 
-                const provider = waffle.provider;
-                const realContractBalance = await provider.getBalance(contract.address);
+                //const provider = waffle.provider;
+                //const realContractBalance = await provider.getBalance(contract.address);
                 const result = await contract.contractBalance();
-                assert.equal(realContractBalance.toString(), result.toString(), "Contract balance isn\'t correct")
+                assert.equal(result.toString(), FTMtoUSDT(ether_small).toString(), "Contract balance isn\'t correct")
             });
     
             it("check getOwnerAddress(string)", async () => {
