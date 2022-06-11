@@ -3,7 +3,7 @@
 // VERSION = 1.2.2
 import "./OrderManager.sol";
 
-pragma solidity >=0.7.0 <=0.8.13;   // versions with major support and testing
+pragma solidity ^0.8.0;  // versions with major support and testing
 
 contract MoneyBoxManager is OrderManager {
 
@@ -51,7 +51,10 @@ contract MoneyBoxManager is OrderManager {
      *************************************/
 
     // this function is the equivalent of newMoneyBox() but it overrides the newOrder function
-    function newOrder(address payable _seller, uint _amount, string memory _orderId)
+    /// The ether will be locked until confirmReceived
+    /// is called.
+    // amountIn == FTM | amountOut == USDT (think always as liquidity pool)
+    function newOrder(address payable _seller, uint _amountIn, uint[] memory _amountOut, string memory _orderId)
         override
         public
         payable
@@ -59,32 +62,32 @@ contract MoneyBoxManager is OrderManager {
         isUniqueId(_orderId)
     {
         OrderManager.orderCount++;
-        OrderManager.orders[_orderId] = Order(_seller, payable(msg.sender), _amount, block.number, block.timestamp, OrderState.Created);
+        OrderManager.orders[_orderId] = Order(_seller, payable(msg.sender), _amountOut[0], block.number, block.timestamp, OrderState.Created);
         
         // link order to search mappings
         OrderManager.buyerOrders[msg.sender].push(_orderId);
         OrderManager.sellerOrders[_seller].push(_orderId);
 
         if(msg.value > 0){
-            this.newPayment{ value: msg.value }(_orderId, msg.value);
+            this.newPayment{ value: msg.value }(_orderId, msg.value, _amountOut[1]);
         }
 
-        emit OrderCreated(_orderId, _seller, payable(msg.sender), _amount, block.timestamp, OrderState.Created);
+        emit OrderCreated(_orderId, _seller, payable(msg.sender), _amountOut[0], block.timestamp, OrderState.Created);
 
     }
 
     // this function miss the control of valid moneybox id
-    function newPayment(string memory moneyBoxId, uint _amount) 
+    function newPayment(string memory moneyBoxId, uint _amountIn, uint _amountOut) 
         public
         payable
-        enoughFunds(tx.origin, _amount)
+        enoughFunds(tx.origin, _amountIn)
     {
         require(
-            msg.value >= _amount,
+            msg.value > 0,
             "Insufficient coin value"
         );
-
-        Payment memory _payment = Payment(payable(tx.origin), _amount, block.timestamp);
+        
+        Payment memory _payment = Payment(payable(tx.origin), _amountOut, block.timestamp);
 
         payments[moneyBoxId].push(_payment);
 
@@ -94,7 +97,18 @@ contract MoneyBoxManager is OrderManager {
         if(this.getAmountToFill(moneyBoxId) <= 0)
             orders[moneyBoxId].state = OrderState.Filled;
 
-        emit NewPaymentCreated(moneyBoxId, _amount, tx.origin, block.timestamp);
+        // stablecoin swap
+        address[] memory path = new address[](2);
+        path[0] = WFTM;
+        path[1] = STABLECOIN;
+
+        uint256[] memory feedbackAmounts = uniswapV2Router.swapETHForExactTokens{value: msg.value}(_amountOut, path, address(this), block.timestamp);
+
+        if(feedbackAmounts[0] < msg.value){
+            payable(tx.origin).transfer(msg.value - feedbackAmounts[0]);
+        }
+
+        emit NewPaymentCreated(moneyBoxId, _amountOut, tx.origin, block.timestamp);
     }
 
     function refund(string memory id)
@@ -105,7 +119,11 @@ contract MoneyBoxManager is OrderManager {
     {
         Payment[] memory ps = payments[id];
         for (uint i = 0; i < ps.length; i++) {
-            ps[i].from.transfer(ps[i].amount);
+            //ps[i].from.transfer(ps[i].amount);
+            require(
+                IERC20(STABLECOIN).transfer(ps[i].from, ps[i].amount), 
+                "Transfer failed."
+            );
         }
 
         orders[id].state = OrderState.Cancelled;
@@ -136,7 +154,10 @@ contract MoneyBoxManager is OrderManager {
             paid += ps[i].amount;
         }
 
-        return total-paid;
+        if(total < paid)
+            return 0;
+        else
+            return total - paid;
     }
 
     /*
