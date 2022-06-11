@@ -1,54 +1,26 @@
 {
-  "name": "smart-contract",
-  "version": "0.0.0",
-  "description": "Smart Contract per ShopChain",
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
-  "module": "./dist/src/index.js",
-  "files": [
-    "dist"
-  ],
+  "name": "hardhat_tutorial",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "clean": "rimraf build && rimraf dist && rimraf coverage && rimraf coverage",
-    "prebuild": "npm run clean",
-    "build-contract": "truffle compile",
-    "migrate": "truffle migrate",
-    "build-typescript": "tsc",
-    "build": "npm run build-contract && npm run build-typescript",
-    "test": "truffle test",
-    "posttest": "truffle run coverage",
-    "prepare": "npm run build",
-    "chain": "ganache-cli"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Yakuzaishi-SWE/smart-contract.git"
-  },
-  "author": "Yakuzaishi-SWE",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Yakuzaishi-SWE/smart-contract/issues"
-  },
-  "homepage": "https://github.com/Yakuzaishi-SWE/smart-contract#readme",
   "devDependencies": {
-    "@truffle/hdwallet-provider": "^2.0.3",
-    "bignumber.js": "^9.0.2",
-    "chai": "^4.3.6",
-    "chai-as-promised": "7.1.1",
-    "ganache-cli": "^6.12.2",
-    "json-loader": "^0.5.7",
-    "mocha": "^9.2.0",
-    "rimraf": "^3.0.2",
-    "solidity-coverage": "^0.7.18",
-    "truffle": "5.4.33",
-    "ts-loader": "^9.2.6",
-    "typescript": "^4.5.5",
-    "web3": "^1.7.0",
-    "webpack": "^5.61.0",
-    "webpack-cli": "^4.9.1"
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.6.8",
+    "hardhat": "^2.9.6",
+    "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
-    "web3-eth-contract": "^1.7.0",
-    "web3-utils": "^1.7.0"
+    "@hovoh/spookyswap-core": "^1.1.0",
+    "@openzeppelin/contracts": "^4.6.0",
+    "dotenv": "^16.0.1",
+    "hardhat-tracer": "^1.1.0-rc.6"
   }
 }
